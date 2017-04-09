@@ -1,0 +1,7 @@
+{
+  "size": 100,
+  "sub": {
+    "mode": "replace-${me}",
+    "bar": 100
+  }
+}

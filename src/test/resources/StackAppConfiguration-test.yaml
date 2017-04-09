@@ -1,0 +1,5 @@
+---
+sub:
+  mode: test
+  remoteURI: ${/server/applicationConnectors/0/type}://${/server/applicationConnectors/0/bindHost}:${/server/applicationConnectors/0/port}/find/me/here
+  bar: 42

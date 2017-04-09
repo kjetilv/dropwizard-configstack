@@ -1,0 +1,8 @@
+{
+  "flag": true,
+  "sub": {
+    "mode": "prod",
+    "remoteURI": "${/server/applicationConnectors/0/type}://${/server/applicationConnectors/0/bindHost}",
+    "bar": 10
+  }
+}
