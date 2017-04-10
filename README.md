@@ -59,6 +59,11 @@ MyConfiguration-misc.json
 MyConfiguration-debug.json
 ```
 
+The stack is popped and applied, so "later" stack elements (further
+down) override earlier ones (further up). In this case, the misc
+config overrides the base config and the debug config has the last
+say.
+
 YAML resources are checked too, so if, say, the following resources
 exist, they will be found and loaded too:
 
