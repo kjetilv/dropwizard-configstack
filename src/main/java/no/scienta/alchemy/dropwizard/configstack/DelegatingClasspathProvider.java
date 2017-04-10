@@ -3,8 +3,6 @@ package no.scienta.alchemy.dropwizard.configstack;
 import io.dropwizard.configuration.ConfigurationSourceProvider;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
 import io.dropwizard.setup.Bootstrap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,69 +14,61 @@ import java.io.InputStream;
  */
 class DelegatingClasspathProvider implements ConfigurationSourceProvider {
 
-    private static final Logger log = LoggerFactory.getLogger(DelegatingClasspathProvider.class);
-
-    private final ConfigurationSourceProvider fallback;
+    private final Bootstrap<?> bootstrap;
 
     private final boolean fallbackIsFile;
 
-    private final Class<?> configurationClass;
-
-    private final ClassLoader bootstrapClassLoader;
-
     DelegatingClasspathProvider(Bootstrap<?> bootstrap) {
-        this.fallback = bootstrap.getConfigurationSourceProvider();
-        this.fallbackIsFile = this.fallback instanceof FileConfigurationSourceProvider;
-        this.configurationClass = bootstrap.getApplication().getConfigurationClass();
-        this.bootstrapClassLoader = bootstrap.getClassLoader();
+        this.bootstrap = bootstrap;
+        this.fallbackIsFile =
+                bootstrap.getConfigurationSourceProvider() instanceof FileConfigurationSourceProvider;
     }
 
     @Override
     public InputStream open(String base) throws IOException {
         for (String path : paths(base)) {
-            if (filePresentAndLoadableByFallback(path)) {
-                InputStream stream = openFallback(path);
-                if (stream != null) {
-                    return stream;
+            if (loadableAsFile(path)) {
+                InputStream config = openFileFallback(path);
+                if (config != null) { // Found as file
+                    return config;
                 }
             }
             if (cl().getResource(path) != null) {
-                InputStream stream = cl().getResourceAsStream(path);
-                if (stream != null) {
-                    return stream;
+                InputStream config = cl().getResourceAsStream(path);
+                if (config != null) { // Found on classpath
+                    return config;
                 }
             }
-            InputStream stream = openFallback(path);
-            if (stream != null) {
-                return stream;
+            InputStream config = openFileFallback(path); // Last-ditch
+            if (config != null) { // Found... somehow!
+                return config;
             }
         }
-        return null;
-    }
-
-    private ClassLoader cl() {
-        if (this.bootstrapClassLoader != null) {
-            return this.bootstrapClassLoader;
-        }
-        return Thread.currentThread().getContextClassLoader();
+        return null; // No dice
     }
 
     private String[] paths(String base) {
-        return base.startsWith(configurationClass.getSimpleName()) && base.endsWith(JSON_SUFF)
+        Class<?> configClass = bootstrap.getApplication().getConfigurationClass();
+        return base.startsWith(configClass.getSimpleName()) && base.endsWith(JSON_SUFF)
                 ? new String[]{base}
-                : new String[]{base, this.configurationClass.getSimpleName() + "-" + base + JSON_SUFF};
+                : new String[]{base, configClass.getSimpleName() + "-" + base + JSON_SUFF};
     }
 
-    private boolean filePresentAndLoadableByFallback(String path) {
-        File file = new File(path);
-        return file.isFile() && file.canRead() && fallbackIsFile;
+    private ClassLoader cl() {
+        return bootstrap.getClassLoader() != null
+                ? bootstrap.getClassLoader()
+                : Thread.currentThread().getContextClassLoader();
     }
 
-    private InputStream openFallback(String path) {
+    private boolean loadableAsFile(String path) {
+        return fallbackIsFile && new File(path).isFile() && new File(path).canRead();
+    }
+
+    private InputStream openFileFallback(String path) {
         try {
-            return fallback.open(path);
-        } catch (IOException e) {
-            log.debug("{} failed to open <{}>: {}", fallback, path, e.toString());
+            return bootstrap.getConfigurationSourceProvider().open(path);
+        } catch (IOException ignore) {
+            // Not sure whether this should be logged
         }
         return null;
     }
@@ -88,7 +78,8 @@ class DelegatingClasspathProvider implements ConfigurationSourceProvider {
     @Override
     public String toString() {
         return getClass().getSimpleName() + "[" +
-                configurationClass.getSimpleName() + (fallbackIsFile ? ", checking files first" : "") +
+                bootstrap.getApplication().getConfigurationClass().getSimpleName() +
+                (fallbackIsFile ? ", checking files first" : "") +
                 "]";
     }
 }

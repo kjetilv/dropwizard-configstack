@@ -30,7 +30,7 @@ public class StackApp extends Application<StackAppConfiguration> {
                 .enableClasspathResources()
                 .setProgressLogger(string ->
                         System.out.println("### Just testing: " + string))
-                .enableVariableReplacements()
+                .enableVariableSubstitutions()
                 .bundle());
     }
 

@@ -17,13 +17,13 @@ class ConfigStackBundle<C extends Configuration> implements Bundle {
 
     private final boolean classpathResources;
 
-    private final boolean variableReplacements;
+    private final boolean variableSubstitutions;
 
     private final JsonReplacer.Replacer replacer;
 
     ConfigStackBundle(Class<C> configurationClass,
                       boolean classpathResources,
-                      boolean variableReplacements,
+                      boolean variableSubstitutions,
                       JsonReplacer.Replacer replacer,
                       ProgressLogger progressLogger,
                       JsonCombiner jsonCombiner,
@@ -32,7 +32,7 @@ class ConfigStackBundle<C extends Configuration> implements Bundle {
                 progressLogger,
                 jsonCombiner,
                 classpathResources,
-                variableReplacements,
+                variableSubstitutions,
                 replacer);
     }
 
@@ -40,13 +40,13 @@ class ConfigStackBundle<C extends Configuration> implements Bundle {
                       ProgressLogger progressLogger,
                       JsonCombiner jsonCombiner,
                       boolean classpathResources,
-                      boolean variableReplacements,
+                      boolean variableSubstitutions,
                       JsonReplacer.Replacer replacer) {
         this.resolver = Objects.requireNonNull(resolver, "resolver");
         this.progressLogger = progressLogger;
         this.jsonCombiner = jsonCombiner;
         this.classpathResources = classpathResources;
-        this.variableReplacements = variableReplacements;
+        this.variableSubstitutions = variableSubstitutions;
         this.replacer = replacer;
     }
 
@@ -71,7 +71,7 @@ class ConfigStackBundle<C extends Configuration> implements Bundle {
                 bootstrap,
                 resolver,
                 jsonCombiner,
-                variableReplacements,
+                variableSubstitutions,
                 replacer,
                 progressLogger);
     }

@@ -17,7 +17,7 @@ public class ConfigStackBundler<C extends Configuration> {
 
     private boolean classpathResources;
 
-    private boolean variableReplacements;
+    private boolean variableSubstitutions;
 
     private JsonCombiner jsonCombiner;
 
@@ -44,14 +44,14 @@ public class ConfigStackBundler<C extends Configuration> {
         return this;
     }
 
-    public ConfigStackBundler<C> enableVariableReplacements() {
-        this.variableReplacements = true;
+    public ConfigStackBundler<C> enableVariableSubstitutions() {
+        this.variableSubstitutions = true;
         return this;
     }
 
     public ConfigStackBundler<C> setReplacer(JsonReplacer.Replacer replacer) {
         if (replacer != null) {
-            enableVariableReplacements();
+            enableVariableSubstitutions();
         }
         this.replacer = replacer;
         return this;
@@ -73,14 +73,14 @@ public class ConfigStackBundler<C extends Configuration> {
                     progressLogger,
                     jsonCombiner,
                     classpathResources,
-                    variableReplacements,
+                    variableSubstitutions,
                     replacer);
         }
         String[] commonConfigs = this.commonConfigs.stream().toArray(String[]::new);
         return new ConfigStackBundle<>(
                 configurationType,
                 classpathResources,
-                variableReplacements,
+                variableSubstitutions,
                 replacer,
                 progressLogger,
                 jsonCombiner,
