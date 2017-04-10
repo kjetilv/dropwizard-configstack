@@ -84,7 +84,7 @@ many applications – consistent logging springs to mind:
 ```java
 bootstrap.addBundle(
     new ConfigStackBundler<>(StackAppConfiguration.class)
-        .addCommonConfig( "common-config")
+        .addCommonConfig("common-config")
         .enableClasspathResources()
         .enableVariableReplacements()
         .bundle());
