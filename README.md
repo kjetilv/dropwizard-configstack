@@ -16,6 +16,11 @@ was, in no particular order:
 Dropwizard's config support already does much of this - except stacks -
 but not in ways that combine easily.
 
+Is this an opinionated bundle? Well, yes, it might have opinions on
+how to organize your config, but not that many, I would argue, and I
+don't think it holds any extreme views. Hopefull most people should be
+able to reason with it.
+
 ## Simple usage
 
 This is a Dropwizard bundle, so you know how to use it already.
