@@ -10,8 +10,8 @@ was, in no particular order:
   parts of the config as well, like
   `${/server/applicationConnectors/0/type}`.  Give me one reason we
   shouldn't have that.
-* Resources that are loadable from files as usual, but with a
-  fallback to classpath resources
+* Resources that are loadable from files as usual, but with
+  fallbacks to classpath resources.
 
 Dropwizard's config support already does much of this - except stacks -
 but not in ways that combine easily.
@@ -66,12 +66,12 @@ first, then proceed to check the classpath.
 
 ### Replacements
 
-If any values are ${subsitutable}, they will be looked-up and
+If any values are ``${subsitutable}``, they will be looked-up and
 substituted with values from the following sources:
 
-1. system properties
-1. environment properties
-1. the config itself (using JSON pointer syntax)
+1. System properties
+1. Environment properties
+1. The config itself (using JSON pointer syntax)
 
 ## Advanced usage
 
