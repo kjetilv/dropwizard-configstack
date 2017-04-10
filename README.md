@@ -87,6 +87,9 @@ substituted with values from the following sources:
 1. Environment properties
 1. The config itself (using JSON pointer syntax)
 
+The first hit applies, so system properties take effect over environment
+variables, which in turn take effect over the config.
+
 ## Advanced usage
 
 ### Common base config
