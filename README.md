@@ -13,13 +13,17 @@ was, in no particular order:
 * Resources that are loadable from files as usual, but with
   fallbacks to classpath resources.
 
+The stacking is the important part for me.  It needs to happen before
+it gets parsed, ie. dumb node-for-node building of a combined JSON AST,
+so we avoid knowledge about
+
 Dropwizard's config support already does much of this - except stacks -
 but not in ways that combine easily.
 
 Is this an opinionated bundle? Well, yes, it might have opinions on
-how to organize your config, but not that many, I would argue, and I
-don't think it holds any extreme views. Hopefull most people should be
-able to reason with it.
+how to organize your config. But not that many, I would argue, and I
+don't think it holds any extreme views. Hopefully, most people should
+be able to reason with it.
 
 ## Simple usage
 
