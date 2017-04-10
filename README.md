@@ -15,7 +15,7 @@ was, in no particular order:
 
 The stacking is the important part for me.  It needs to happen before
 it gets parsed, ie. dumb node-for-node building of a combined JSON AST,
-so we avoid knowledge about
+so we're cleanly decoupled from any parsing logic taking place later.
 
 Dropwizard's config support already does much of this - except stacks -
 but not in ways that combine easily.
