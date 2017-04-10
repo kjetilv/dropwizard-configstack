@@ -5,10 +5,16 @@ configuration with Dropwizard more manageable. What I missed the most
 was, in no particular order:
 
 * A base, shared config with overrides and/or mix-ins for various
-  purposes and environments
-* Variable substitutions like `${this}` which can reference other
-  parts of the config, like `/server/applicationConnectors/0/type`
-* Resources loadable from files, with fallback to classpath resources
+  purposes and environments - stackable configs!
+* Variable substitutions like `${this}`, which can reference other
+  parts of the config as well, like
+  `${/server/applicationConnectors/0/type}`.  Give me one reason we
+  shouldn't have that.
+* Resources that are loadable from files as usual, but with a
+  fallback to classpath resources
+
+Dropwizard's config support already does much of this - except stacks -
+but not in ways that combine easily.
 
 ## Simple usage
 
