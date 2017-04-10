@@ -120,9 +120,8 @@ MyConfiguration-debug.json
 
 Logging the goings-on is a bit tricky. We are, after all,
 messing around with configuration, and that includes the log
-configuration, so the system doesn't know how to log yet.
-The default behavior is to write to System.out,
-but you can override that:
+configuration, so the system doesn't know how to log yet!
+The default behavior is to write to stdout, but you can override that:
 
 ```java
 bootstrap.addBundle(
@@ -138,8 +137,8 @@ bootstrap.addBundle(
 ### Writing your own resolver
 
 If you're unhappy with the naming conventions, you can always
-write your own ```ConfigResolver```, which can map the string of
-names to any resources you like.
+write your own ```ConfigResolver```, which can map names to any
+resources you like.
 
 ```
 bootstrap.addBundle(
