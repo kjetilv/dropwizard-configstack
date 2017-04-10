@@ -79,7 +79,7 @@ substituted with values from the following sources:
 
 The bundler takes a common-config argument, which will be loaded
 first of all. This is a nice way to enforce some core settings across
-many applications:
+many applications – consistent logging springs to mind:
 
 ```java
 bootstrap.addBundle(
