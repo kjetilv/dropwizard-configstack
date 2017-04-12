@@ -73,10 +73,11 @@ MyConfiguration-misc.yaml
 MyConfiguration-debug.yaml
 ```
 
-Finally, if the paths do exist as file names, they will be loaded in
-preference to whatever is on the classpath. In general, we
-check the bootstrap's existing config source provider for any data
-first, then proceed to check the classpath.
+Finally, if the paths *do* exist as file names, they *will* be loaded in
+preference to whatever is on the classpath. This is the default behavior
+and we want to preserve that. In general, we check the bootstrap's
+existing config source provider for any data first. Only if it fails or
+returns null, we proceed to check the classpath.
 
 ### Replacements
 
@@ -89,6 +90,17 @@ substituted with values from the following sources:
 
 The first hit applies, so system properties take effect over environment
 variables, which in turn take effect over the config.
+
+### What's going on with my config?!
+
+Sometimes the world is not exactly what you expected.  Sometimes, you
+even notice the difference.  Sometimes, you need to find out what the
+world actually *is* like!  To help out, we log progress about what's
+going on – notably, the resources found, their URI's (and a byte count),
+as well as the resulting JSON itself.  By default, all this ends up on
+standard out. After all, logging isn't configured yet!
+
+Of course, this behavior can be changed, as further reading will reveal.
 
 ## Advanced usage
 
