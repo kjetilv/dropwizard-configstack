@@ -25,33 +25,20 @@ class DelegatingClasspathProvider implements ConfigurationSourceProvider {
     }
 
     @Override
-    public InputStream open(String base) throws IOException {
-        for (String path : paths(base)) {
-            if (loadableAsFile(path)) {
-                InputStream config = openFileFallback(path);
-                if (config != null) { // Found as file
-                    return config;
-                }
-            }
-            if (cl().getResource(path) != null) {
-                InputStream config = cl().getResourceAsStream(path);
-                if (config != null) { // Found on classpath
-                    return config;
-                }
-            }
-            InputStream config = openFileFallback(path); // Last-ditch
-            if (config != null) { // Found... somehow!
+    public InputStream open(String path) throws IOException {
+        if (loadableAsFile(path)) {
+            InputStream config = openFileFallback(path);
+            if (config != null) { // Found as file
                 return config;
             }
         }
-        return null; // No dice
-    }
-
-    private String[] paths(String base) {
-        Class<?> configClass = bootstrap.getApplication().getConfigurationClass();
-        return base.startsWith(configClass.getSimpleName()) && base.endsWith(JSON_SUFF)
-                ? new String[]{base}
-                : new String[]{base, configClass.getSimpleName() + "-" + base + JSON_SUFF};
+        if (cl().getResource(path) != null) {
+            InputStream config = cl().getResourceAsStream(path);
+            if (config != null) { // Found on classpath
+                return config;
+            }
+        }
+        return null;
     }
 
     private ClassLoader cl() {
@@ -72,8 +59,6 @@ class DelegatingClasspathProvider implements ConfigurationSourceProvider {
         }
         return null;
     }
-
-    private static final String JSON_SUFF = ".json";
 
     @Override
     public String toString() {

@@ -9,7 +9,7 @@ import java.util.List;
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
 public class ConfigStackBundler<C extends Configuration> {
 
-    private final Class<C> configurationType;
+    private final Class<C> configurationClass;
 
     private ConfigResolver<C> resolver;
 
@@ -25,8 +25,8 @@ public class ConfigStackBundler<C extends Configuration> {
 
     private JsonReplacer.Replacer replacer;
 
-    public ConfigStackBundler(Class<C> configurationType) {
-        this.configurationType = configurationType;
+    public ConfigStackBundler(Class<C> configurationClass) {
+        this.configurationClass = configurationClass;
     }
 
     public ConfigStackBundler<C> setResolver(ConfigResolver<C> resolver) {
@@ -67,23 +67,15 @@ public class ConfigStackBundler<C extends Configuration> {
     }
 
     public ConfigStackBundle<C> bundle() {
-        if (resolver != null) {
-            return new ConfigStackBundle<>(
-                    resolver,
-                    progressLogger,
-                    jsonCombiner,
-                    classpathResources,
-                    variableSubstitutions,
-                    replacer);
-        }
-        String[] commonConfigs = this.commonConfigs.stream().toArray(String[]::new);
+        ConfigResolver<C> resolver = this.resolver == null
+                ? new BasenameVariationsResolver<>(configurationClass, commonConfigs.stream().toArray(String[]::new))
+                : this.resolver;
         return new ConfigStackBundle<>(
-                configurationType,
-                classpathResources,
-                variableSubstitutions,
-                replacer,
+                resolver,
                 progressLogger,
                 jsonCombiner,
-                commonConfigs);
+                classpathResources,
+                variableSubstitutions,
+                replacer);
     }
 }

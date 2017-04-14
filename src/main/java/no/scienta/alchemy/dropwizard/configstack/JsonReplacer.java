@@ -2,15 +2,14 @@ package no.scienta.alchemy.dropwizard.configstack;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import java.util.Iterator;
+import static no.scienta.alchemy.dropwizard.configstack.JsonUtils.*;
 
 class JsonReplacer {
 
     static JsonNode replace(JsonNode base, Replacer replacer) {
-        return base == null || base.isNull() ? base
+        return JsonUtils.isNull(base) ? base
                 : base.isTextual() ? replacedText(base, replacer)
                 : base.isObject() ? object(base, replacer)
                 : base.isArray() ? array(base, replacer)
@@ -18,7 +17,7 @@ class JsonReplacer {
     }
 
     private static JsonNode array(JsonNode base, Replacer replacer) {
-        ArrayNode arr = FACTORY.arrayNode();
+        ArrayNode arr = arrayNode();
         for (JsonNode el : base) {
             arr.add(replace(el, replacer));
         }
@@ -26,21 +25,20 @@ class JsonReplacer {
     }
 
     private static JsonNode object(JsonNode base, Replacer replacer) {
-        ObjectNode obj = FACTORY.objectNode();
-        for (Iterator<String> it = base.fieldNames(); it.hasNext(); ) {
-            String name = it.next();
-            JsonNode replacedSub = replace(base.get(name), replacer);
-            obj.set(name, replacedSub);
-        }
+        ObjectNode obj = objectNode();
+        base.fieldNames().forEachRemaining(name ->
+                obj.set(name, replaced(base, name, replacer)));
         return obj;
+    }
+
+    private static JsonNode replaced(JsonNode base, String name, Replacer replacer) {
+        return replace(base.get(name), replacer);
     }
 
     private static JsonNode replacedText(JsonNode base, Replacer replacer) {
         String original = base.textValue();
         String replaced = replacer.replace(original);
-        return replaced.equals(original)
-                ? base
-                : FACTORY.textNode(replaced);
+        return replaced.equals(original) ? base : textNode(replaced);
     }
 
     @FunctionalInterface
@@ -48,6 +46,4 @@ class JsonReplacer {
 
         String replace(String value);
     }
-
-    private static final JsonNodeFactory FACTORY = JsonNodeFactory.instance;
 }

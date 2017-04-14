@@ -28,16 +28,13 @@ final class DefaultReplacer implements JsonReplacer.Replacer {
     public String replace(String value) {
         String workString = value;
         while (true) {
-            String replaced = replaced(node, workString);
+            String replaced = new StrSubstitutor(new Lookup(node), "${", "}", '\'')
+                    .replace(workString);
             if (replaced.equals(workString)) {
                 return workString;
             }
             workString = replaced;
         }
-    }
-
-    private String replaced(JsonNode combined, String value) {
-        return new StrSubstitutor(new Lookup(combined), "${", "}", '\'').replace(value);
     }
 
     private final class Lookup extends StrLookup<String> {

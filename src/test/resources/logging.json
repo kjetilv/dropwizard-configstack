@@ -1,0 +1,38 @@
+{
+  "server": {
+    "requestLog": {
+      "appenders": [
+        {
+          "type": "file",
+          "timeZone": "CET",
+          "currentLogFilename": "logs/${/appName}-request.log",
+          "archivedLogFilenamePattern": "logs/${/appName}-request-%d.log.zip",
+          "archivedFileCount": 5
+        }
+      ]
+    }
+  },
+  "logging": {
+    "level": "INFO",
+    "loggers": {
+      "no.scienta.alchemy.dropwizard.configstack": "DEBUG"
+    },
+    "appenders": [
+      {
+        "type": "console",
+        "threshold": "INFO",
+        "timeZone": "CET",
+        "logFormat": "%d{\"yyyy-MM-dd HH:mm:ss,SSSZ\"} %5p %c{2}: %m [%t]%n"
+      },
+      {
+        "type": "file",
+        "currentLogFilename": "logs/${/appName}-debug.log",
+        "archivedLogFilenamePattern": "logs/${/appName}-debug-%d.log.zip",
+        "archivedFileCount": 5,
+        "threshold": "DEBUG",
+        "timeZone": "CET",
+        "logFormat": "%d{\"yyyy-MM-dd HH:mm:ss,SSSZ\"} %5p %c: %m [%t]%n"
+      }
+    ]
+  }
+}

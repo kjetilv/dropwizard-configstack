@@ -1,6 +1,7 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
 import com.google.common.io.ByteStreams;
+import io.dropwizard.Configuration;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -30,8 +31,12 @@ final class Loadable {
         this.streamString = stream == null ? null : stream.toString();
     }
 
-    boolean is(Suffix suffix) {
-        return this.path.endsWith("." + suffix.name().toLowerCase());
+    String getPath() {
+        return path;
+    }
+
+    boolean isYaml() {
+        return Suffix.YAML.isSuffixed(this.path);
     }
 
     boolean hasContent() {
@@ -40,6 +45,10 @@ final class Loadable {
 
     InputStream getStream() {
         return new ByteArrayInputStream(contents);
+    }
+
+    private boolean startsWith(Class<? extends Configuration> configurationClass, String next) {
+        return path.toLowerCase().startsWith(configurationClass.getName() + next);
     }
 
     @Override

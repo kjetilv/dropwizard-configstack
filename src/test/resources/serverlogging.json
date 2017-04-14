@@ -1,0 +1,12 @@
+{
+  "logging": {
+    "appenders": [
+      {
+        "type": "file",
+        "currentLogFilename": "logs/${/appName}.log",
+        "archivedLogFilenamePattern": "logs/${/appName}-%d.log.zip",
+        "archivedFileCount": 30
+      }
+    ]
+  }
+}

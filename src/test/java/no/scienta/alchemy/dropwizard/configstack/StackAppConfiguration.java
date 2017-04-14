@@ -1,11 +1,9 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
-import io.dropwizard.Configuration;
-
 import java.net.URI;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
-public class StackAppConfiguration extends Configuration {
+public class StackAppConfiguration extends BaseConfiguration {
 
     public Boolean flag;
 

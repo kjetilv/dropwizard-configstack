@@ -1,7 +1,6 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
 import io.dropwizard.Configuration;
-import io.dropwizard.setup.Bootstrap;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -57,17 +56,17 @@ class BasenameVariationsResolver<C extends Configuration> implements ConfigResol
     }
 
     @Override
-    public Stream<String> commonConfig(Bootstrap<C> bootstrap) {
+    public Stream<String> commonConfig() {
         return Arrays.stream(commonConfigs).flatMap(this::suffixed);
     }
 
     @Override
-    public final Stream<String> baseConfig(Bootstrap<C> bootstrap) {
+    public final Stream<String> baseConfig() {
         return variations("");
     }
 
     @Override
-    public final Stream<String> stackedConfig(Bootstrap<C> bootstrap, String stackedElement) {
+    public final Stream<String> stackedConfig(String stackedElement) {
         return variations(stackedElement);
     }
 
@@ -80,8 +79,7 @@ class BasenameVariationsResolver<C extends Configuration> implements ConfigResol
     }
 
     private Function<Suffix, String> stacked(String baseConfig, String name) {
-        return suffix ->
-                baseConfig + variation(name) + "." + suffix.name().toLowerCase();
+        return suffix -> suffix.suffixed(baseConfig + variation(name));
     }
 
     private static String variation(String name) {

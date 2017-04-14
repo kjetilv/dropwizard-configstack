@@ -10,22 +10,16 @@ import io.dropwizard.configuration.ConfigurationSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class StackingConfigurationSourceProvider<C extends Configuration> implements ConfigurationSourceProvider {
 
     private final Bootstrap<C> bootstrap;
-
-    private final ConfigResolver<C> resolver;
 
     private final JsonCombiner jsonCombiner;
 
@@ -35,7 +29,7 @@ class StackingConfigurationSourceProvider<C extends Configuration> implements Co
 
     private final ProgressLogger progressLogger;
 
-    private final ConfigurationSourceProvider provider;
+    private final LoadablesResolver<C> loadablesResolver;
 
     /**
      * @param bootstrap      The bootstrap
@@ -50,23 +44,31 @@ class StackingConfigurationSourceProvider<C extends Configuration> implements Co
                                         JsonReplacer.Replacer replacer,
                                         ProgressLogger progressLogger) {
         this.bootstrap = Objects.requireNonNull(bootstrap, "bootstrap");
-        this.provider = this.bootstrap.getConfigurationSourceProvider();
-        if (this.provider instanceof StackingConfigurationSourceProvider) {
+        if (this.bootstrap.getConfigurationSourceProvider() instanceof StackingConfigurationSourceProvider) {
+                throw new IllegalStateException
+                        ("Please set a different source provider: " + this.bootstrap);
+            }
+        ConfigurationSourceProvider provider = this.bootstrap.getConfigurationSourceProvider();
+        if (provider instanceof StackingConfigurationSourceProvider) {
             throw new IllegalStateException
                     ("Please set a different source provider: " + this.bootstrap.getConfigurationSourceProvider());
         }
+        this.progressLogger = progressLogger == null ? System.out::println : progressLogger;
+        this.loadablesResolver = new LoadablesResolver<>(
+                provider,
+                Objects.requireNonNull(resolver, "resolver"),
+                this.progressLogger);
 
-        this.resolver = Objects.requireNonNull(resolver, "resolver");
         this.jsonCombiner = jsonCombiner == null ? new JsonCombiner() : jsonCombiner;
         this.variableReplacements = variableReplacements;
         this.replacer = replacer;
-        this.progressLogger = progressLogger == null ? System.out::println : progressLogger;
     }
 
     @Override
     public InputStream open(String path) throws IOException {
-        String[] stack = stackedElements(path);
-        JsonNode combined = readCombinedConfig(stack);
+        List<Loadable> prioritizedLoadables = loadablesResolver.resolveLoadables(path);
+
+        JsonNode combined = combine(prioritizedLoadables);
         JsonNode processed = variableReplacements ? replace(combined) : combined;
 
         String config = writeConfig(processed);
@@ -81,37 +83,10 @@ class StackingConfigurationSourceProvider<C extends Configuration> implements Co
         return JsonReplacer.replace(combined, replacer);
     }
 
-    private JsonNode readCombinedConfig(String[] stack) throws IOException {
-        List<String> paths = paths(stack).collect(Collectors.toList());
-        List<Loadable> loadables = paths.stream().flatMap(this::read)
-                .collect(Collectors.toList());
-        audit(stack, paths, loadables);
-
-        return combine(loadables);
-    }
-
     private JsonNode combine(List<Loadable> loadables) {
         return loadables.stream()
                 .flatMap(this::readJson)
                 .reduce(null, jsonCombiner::combine);
-    }
-
-    private void audit(String[] stack, List<String> paths, List<Loadable> loadables) {
-        if (loadables.isEmpty()) {
-            throw new IllegalStateException(
-                    "Warning: No configs found for " +
-                            resolver.baseConfig(this.bootstrap).collect(Collectors.joining(", ")) +
-                            ", stack [" + String.join(", ", Arrays.asList(stack)) + "]" +
-                            Arrays.stream(stack).flatMap(path ->
-                                    resolver.stackedConfig(this.bootstrap, path)
-                            ).collect(Collectors.joining(", ")) +
-                            ", paths: " + String.join(", ", paths));
-        }
-
-        progressLogger.println(getClass().getSimpleName() +
-                ": Loading config stack [" + String.join(", ", Arrays.asList(stack)) + "] from paths:\n  " +
-                loadables.stream().map(Loadable::toString).collect(Collectors.joining("\n  ")) +
-                "\n");
     }
 
     private String writeConfig(JsonNode combined) throws JsonProcessingException {
@@ -133,39 +108,13 @@ class StackingConfigurationSourceProvider<C extends Configuration> implements Co
     }
 
     private JsonFactory factory(ObjectMapper objectMapper, Loadable loadable) {
-        return loadable.is(Suffix.YAML) ? new YAMLFactory(objectMapper) : objectMapper.getFactory();
-    }
-
-    private Stream<String> paths(String[] stack) {
-        return Stream.of(
-                resolver.commonConfig(bootstrap),
-                resolver.baseConfig(bootstrap),
-                Arrays.stream(stack).flatMap(string -> Stream.concat(
-                        Stream.of(string),
-                        resolver.stackedConfig(bootstrap, string)))
-        ).flatMap(Function.identity());
-    }
-
-    private Stream<Loadable> read(String path) {
-        try {
-            return Stream.of(provider.open(path)).filter(Objects::nonNull).map(Loadable.forPath(path));
-        } catch (FileNotFoundException e) {
-            return Stream.empty();
-        } catch (Exception e) {
-            throw new IllegalStateException(this + " failed to open <" + path + ">", e);
-        }
-    }
-
-    private String[] stackedElements(String input) {
-        return Arrays.stream(input.split("[^.a-zA-Z_0-9\\-]+"))
-                .filter(s -> !s.trim().isEmpty())
-                .toArray(String[]::new);
+        return loadable.isYaml() ? new YAMLFactory(objectMapper) : objectMapper.getFactory();
     }
 
     private static final Charset UTF_8 = Charset.forName("UTF-8");
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "[" + bootstrap.getApplication() + " <= " + this.provider + "]";
+        return getClass().getSimpleName() + "[" + bootstrap.getApplication() + " <= " + this.loadablesResolver + "]";
     }
 }

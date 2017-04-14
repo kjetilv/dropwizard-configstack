@@ -1,7 +1,6 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
 import io.dropwizard.Configuration;
-import io.dropwizard.setup.Bootstrap;
 
 import java.util.stream.Stream;
 
@@ -10,20 +9,18 @@ import java.util.stream.Stream;
  */
 public interface ConfigResolver<C extends Configuration> {
 
-    default Stream<String> commonConfig(Bootstrap<C> bootstrap) {
+    default Stream<String> commonConfig() {
         return Stream.empty();
     }
 
     /**
-     * @param bootstrap Bootstrap
      * @return Resource for base config
      */
-    Stream<String> baseConfig(Bootstrap<C> bootstrap);
+    Stream<String> baseConfig();
 
     /**
-     * @param bootstrap Bootstrap
-     * @param stack Stack element
+     * @param stack     Stack element
      * @return What the resource looks like
      */
-    Stream<String> stackedConfig(Bootstrap<C> bootstrap, String stack);
+    Stream<String> stackedConfig(String stack);
 }

@@ -21,21 +21,6 @@ class ConfigStackBundle<C extends Configuration> implements Bundle {
 
     private final JsonReplacer.Replacer replacer;
 
-    ConfigStackBundle(Class<C> configurationClass,
-                      boolean classpathResources,
-                      boolean variableSubstitutions,
-                      JsonReplacer.Replacer replacer,
-                      ProgressLogger progressLogger,
-                      JsonCombiner jsonCombiner,
-                      String... commonConfigs) {
-        this(new BasenameVariationsResolver<>(configurationClass, commonConfigs),
-                progressLogger,
-                jsonCombiner,
-                classpathResources,
-                variableSubstitutions,
-                replacer);
-    }
-
     ConfigStackBundle(ConfigResolver resolver,
                       ProgressLogger progressLogger,
                       JsonCombiner jsonCombiner,
@@ -57,7 +42,6 @@ class ConfigStackBundle<C extends Configuration> implements Bundle {
             enableClasspathResources(bootstrap);
         }
         StackingConfigurationSourceProvider<C> provider = buildProvider(bootstrap);
-
         bootstrap.setConfigurationSourceProvider(provider);
     }
 

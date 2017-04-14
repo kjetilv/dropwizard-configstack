@@ -1,8 +1,8 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
 import io.dropwizard.Configuration;
-import io.dropwizard.setup.Bootstrap;
 
+import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
@@ -29,26 +29,27 @@ public class SimpleConfigResolver<C extends Configuration> implements ConfigReso
      * @param baseConfig The base config
      */
     public SimpleConfigResolver(String baseConfig) {
-        this.baseConfig = baseConfig;
+        this.baseConfig = Objects.requireNonNull(baseConfig, "baseConfig").trim();
+        if (this.baseConfig.isEmpty()) {
+            throw new IllegalArgumentException("Empty base config");
+        }
     }
 
     /**
-     * @param bootstrap Bootstrap
      * @return The base config we were constructed with
      */
     @Override
-    public Stream<String> baseConfig(Bootstrap<C> bootstrap) {
+    public Stream<String> baseConfig() {
         return Stream.of(baseConfig);
     }
 
     /**
      * The stacked element is the resource.
-     * @param bootstrap Bootstrap
      * @param stack Stack element
      * @return The stack element
      */
     @Override
-    public Stream<String> stackedConfig(Bootstrap<C> bootstrap, String stack) {
+    public Stream<String> stackedConfig(String stack) {
         return Stream.of(stack);
     }
 }
