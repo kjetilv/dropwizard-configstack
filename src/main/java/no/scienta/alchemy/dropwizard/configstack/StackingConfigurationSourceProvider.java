@@ -21,7 +21,7 @@ class StackingConfigurationSourceProvider<C extends Configuration> implements Co
 
     private final Bootstrap<C> bootstrap;
 
-    private final JsonCombiner jsonCombiner;
+    private final ArrayStrategy arrayStrategy;
 
     private final boolean variableReplacements;
 
@@ -34,32 +34,32 @@ class StackingConfigurationSourceProvider<C extends Configuration> implements Co
     /**
      * @param bootstrap      The bootstrap
      * @param resolver       How to resolve base config and stacked elements
-     * @param jsonCombiner   How to combine json structures, may be null
+     * @param arrayStrategy  How to combine config arrays, may be null
      * @param progressLogger How to log progress, may be null
      */
     StackingConfigurationSourceProvider(Bootstrap<C> bootstrap,
                                         ConfigResolver<C> resolver,
-                                        JsonCombiner jsonCombiner,
+                                        ArrayStrategy arrayStrategy,
                                         boolean variableReplacements,
                                         JsonReplacer.Replacer replacer,
                                         ProgressLogger progressLogger) {
         this.bootstrap = Objects.requireNonNull(bootstrap, "bootstrap");
         if (this.bootstrap.getConfigurationSourceProvider() instanceof StackingConfigurationSourceProvider) {
-                throw new IllegalStateException
+            throw new IllegalStateException
                         ("Please set a different source provider: " + this.bootstrap);
-            }
+        }
         ConfigurationSourceProvider provider = this.bootstrap.getConfigurationSourceProvider();
         if (provider instanceof StackingConfigurationSourceProvider) {
             throw new IllegalStateException
                     ("Please set a different source provider: " + this.bootstrap.getConfigurationSourceProvider());
         }
+        this.arrayStrategy = arrayStrategy;
         this.progressLogger = progressLogger == null ? System.out::println : progressLogger;
         this.loadablesResolver = new LoadablesResolver<>(
                 provider,
                 Objects.requireNonNull(resolver, "resolver"),
                 this.progressLogger);
 
-        this.jsonCombiner = jsonCombiner == null ? new JsonCombiner() : jsonCombiner;
         this.variableReplacements = variableReplacements;
         this.replacer = replacer;
     }
@@ -86,7 +86,7 @@ class StackingConfigurationSourceProvider<C extends Configuration> implements Co
     private JsonNode combine(List<Loadable> loadables) {
         return loadables.stream()
                 .flatMap(this::readJson)
-                .reduce(null, jsonCombiner::combine);
+                .reduce(null, JsonCombiner.create(arrayStrategy));
     }
 
     private String writeConfig(JsonNode combined) throws JsonProcessingException {

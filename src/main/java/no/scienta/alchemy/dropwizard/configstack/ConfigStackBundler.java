@@ -19,7 +19,7 @@ public class ConfigStackBundler<C extends Configuration> {
 
     private boolean variableSubstitutions;
 
-    private JsonCombiner jsonCombiner;
+    private ArrayStrategy arrayStrategy;
 
     private ProgressLogger progressLogger;
 
@@ -57,8 +57,8 @@ public class ConfigStackBundler<C extends Configuration> {
         return this;
     }
 
-    public void setJsonCombiner(JsonCombiner jsonCombiner) {
-        this.jsonCombiner = jsonCombiner;
+    public void setArrayStrategy(ArrayStrategy arrayStrategy) {
+        this.arrayStrategy = arrayStrategy;
     }
 
     public ConfigStackBundler<C> setProgressLogger(ProgressLogger progressLogger) {
@@ -73,7 +73,7 @@ public class ConfigStackBundler<C extends Configuration> {
         return new ConfigStackBundle<>(
                 resolver,
                 progressLogger,
-                jsonCombiner,
+                arrayStrategy,
                 classpathResources,
                 variableSubstitutions,
                 replacer);

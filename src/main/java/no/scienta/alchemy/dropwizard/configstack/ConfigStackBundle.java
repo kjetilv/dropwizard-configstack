@@ -13,7 +13,7 @@ class ConfigStackBundle<C extends Configuration> implements Bundle {
 
     private final ProgressLogger progressLogger;
 
-    private final JsonCombiner jsonCombiner;
+    private final ArrayStrategy arrayStrategy;
 
     private final boolean classpathResources;
 
@@ -23,13 +23,13 @@ class ConfigStackBundle<C extends Configuration> implements Bundle {
 
     ConfigStackBundle(ConfigResolver resolver,
                       ProgressLogger progressLogger,
-                      JsonCombiner jsonCombiner,
+                      ArrayStrategy arrayStrategy,
                       boolean classpathResources,
                       boolean variableSubstitutions,
                       JsonReplacer.Replacer replacer) {
         this.resolver = Objects.requireNonNull(resolver, "resolver");
         this.progressLogger = progressLogger;
-        this.jsonCombiner = jsonCombiner;
+        this.arrayStrategy = arrayStrategy;
         this.classpathResources = classpathResources;
         this.variableSubstitutions = variableSubstitutions;
         this.replacer = replacer;
@@ -54,7 +54,7 @@ class ConfigStackBundle<C extends Configuration> implements Bundle {
         return new StackingConfigurationSourceProvider<>(
                 bootstrap,
                 resolver,
-                jsonCombiner,
+                arrayStrategy,
                 variableSubstitutions,
                 replacer,
                 progressLogger);

@@ -13,7 +13,7 @@ public class JsonCombinerTest {
     public void combineSimple() throws Exception {
         JsonNode jn1 = read("{ \"foo\": \"bar\"}");
         JsonNode jn2 = read("{ \"zot\": \"zip\"}");
-        JsonNode jnc = new JsonCombiner().combine(jn1, jn2);
+        JsonNode jnc = JsonCombiner.combine(jn1, jn2);
 
         assertNotNull(jnc);
         assertEquals(2, jnc.size());
@@ -27,7 +27,7 @@ public class JsonCombinerTest {
     public void nullOverride() {
         JsonNode jn1 = read("{ \"foo\": \"bar\"}");
         JsonNode jn2 = read("{}");
-        JsonNode jnc = new JsonCombiner().combine(jn1, jn2);
+        JsonNode jnc = JsonCombiner.combine(jn1, jn2);
 
         assertNotNull(jnc);
         assertEquals(1, jnc.size());
@@ -39,7 +39,7 @@ public class JsonCombinerTest {
     public void combineStructure() throws Exception {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": \"bar\"}}");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": \"zip\"}}");
-        JsonNode jnc = new JsonCombiner().combine(jn1, jn2);
+        JsonNode jnc = JsonCombiner.combine(jn1, jn2);
 
         assertNotNull(jnc);
         assertEquals(1, jnc.size());
@@ -52,7 +52,7 @@ public class JsonCombinerTest {
     public void addStructure() {
         JsonNode jn1 = read("{ \"bar\": 1 }");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": \"zip\"}}");
-        JsonNode jnc = new JsonCombiner().combine(jn1, jn2);
+        JsonNode jnc = JsonCombiner.combine(jn1, jn2);
 
         assertNotNull(jnc);
         assertEquals(2, jnc.size());
@@ -68,7 +68,7 @@ public class JsonCombinerTest {
     public void addStructureField() {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": \"bar\"}}");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": \"zip\", \"foo\": 1}}");
-        JsonNode jnc = new JsonCombiner().combine(jn1, jn2);
+        JsonNode jnc = JsonCombiner.combine(jn1, jn2);
 
         assertNotNull(jnc);
         assertEquals(1, jnc.size());
@@ -85,7 +85,7 @@ public class JsonCombinerTest {
     public void overlayArray() {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": [\"zip\"]}}");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": [\"zip\", \"zot\"]}}");
-        JsonNode jnc = new JsonCombiner().combine(jn1, jn2);
+        JsonNode jnc = JsonCombiner.combine(jn1, jn2);
 
         assertEquals(1, jnc.size());
         assertTrue(jnc.has("foo"));
@@ -100,7 +100,7 @@ public class JsonCombinerTest {
     public void appendArray() {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": [\"zip\"]}}");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": [\"zip\", \"zot\"]}}");
-        JsonNode jnc = new JsonCombiner(JsonCombiner.ArrayStrategy.APPEND).combine(jn1, jn2);
+        JsonNode jnc = JsonCombiner.combine(jn1, jn2, ArrayStrategy.APPEND);
 
         assertEquals(1, jnc.size());
         assertTrue(jnc.has("foo"));
@@ -116,7 +116,7 @@ public class JsonCombinerTest {
     public void prependArray() {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": [\"zip\"]}}");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": [\"zip\", \"zot\"]}}");
-        JsonNode jnc = new JsonCombiner(JsonCombiner.ArrayStrategy.PREPEND).combine(jn1, jn2);
+        JsonNode jnc = JsonCombiner.combine(jn1, jn2, ArrayStrategy.PREPEND);
 
         assertEquals(1, jnc.size());
         assertTrue(jnc.has("foo"));
@@ -132,7 +132,7 @@ public class JsonCombinerTest {
     public void combineArray() {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": [{\"foo\":\"zip\"}, {\"zip\":\"zot\"}]}}");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": [{\"foo\":\"zot\", \"bar\": \"zot\"}]}}");
-        JsonNode jnc = new JsonCombiner().combine(jn1, jn2);
+        JsonNode jnc = JsonCombiner.combine(jn1, jn2);
 
         assertEquals(1, jnc.size());
         assertTrue(jnc.has("foo"));

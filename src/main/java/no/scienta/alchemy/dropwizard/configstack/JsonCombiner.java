@@ -5,51 +5,19 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.util.function.BinaryOperator;
 import java.util.stream.IntStream;
 
-import static no.scienta.alchemy.dropwizard.configstack.JsonCombiner.ArrayStrategy.*;
+import static no.scienta.alchemy.dropwizard.configstack.ArrayStrategy.*;
 import static no.scienta.alchemy.dropwizard.configstack.JsonUtils.arrayNode;
 import static no.scienta.alchemy.dropwizard.configstack.JsonUtils.isNull;
 
-@SuppressWarnings("WeakerAccess")
-public class JsonCombiner {
+final class JsonCombiner {
 
-    /**
-     * How to combine a base array with and override array.
-     */
-    public enum ArrayStrategy {
-        /**
-         * Override's elements are appended to the base array
-         */
-        APPEND,
-        /**
-         * Override's elements are prepended to the base array
-         */
-        PREPEND,
-        /**
-         * Override is recursively imposed on the base array, element by element
-         */
-        OVERLAY,
-        /**
-         * Override replaces base array
-         */
-        REPLACE;
-    }
-
-    private final ArrayStrategy arrays;
-
-    /**
-     * Combiner with {@link ArrayStrategy#OVERLAY overlay} array strategy
-     */
-    public JsonCombiner() {
-        this(null);
-    }
-
-    /**
-     * @param arrays How to handle arrays.  If null, {@link ArrayStrategy#OVERLAY overlay} is used
-     */
-    public JsonCombiner(ArrayStrategy arrays) {
-        this.arrays = arrays;
+    static BinaryOperator<JsonNode> create(ArrayStrategy arrayStrategy) {
+        return arrayStrategy == null
+                ? JsonCombiner::combine
+                : (j1, j2) -> combine(j1, j2, arrayStrategy);
     }
 
     /**
@@ -59,8 +27,8 @@ public class JsonCombiner {
      * @param override The override
      * @return New, combined node
      */
-    public JsonNode combine(JsonNode base, JsonNode override) {
-        return combine(base, override, this.arrays);
+    static JsonNode combine(JsonNode base, JsonNode override) {
+        return combine(base, override, null);
     }
 
     /**
@@ -70,7 +38,7 @@ public class JsonCombiner {
      * @param override The override
      * @return New, combined node
      */
-    public static JsonNode combine(JsonNode base, JsonNode override, ArrayStrategy arrays) {
+    static JsonNode combine(JsonNode base, JsonNode override, ArrayStrategy arrays) {
         return isNull(base) ? override
                 : isNull(override) ? base
                 : areObjects(base, override) ? combineObject((ObjectNode) base, (ObjectNode) override, arrays)
@@ -115,5 +83,9 @@ public class JsonCombiner {
 
     private static IntStream indexes(JsonNode base, JsonNode override) {
         return IntStream.range(0, Math.max(base.size(), override.size()));
+    }
+
+    private JsonCombiner() {
+
     }
 }
