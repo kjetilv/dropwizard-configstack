@@ -107,8 +107,8 @@ Of course, this behavior can be changed, as further reading will reveal.
 ### Common base config
 
 The bundler takes a common-config argument, which will be loaded
-first of all. This is a nice way to enforce some core settings across
-many applications – consistent logging springs to mind:
+first of all. This is a nice way to enforce some global settings across
+several applications – consistent logging springs to mind:
 
 ```java
 bootstrap.addBundle(
@@ -125,6 +125,27 @@ Now our simple example will include:
 common-config.yaml
 MyConfiguration.json
 MyConfiguration-misc.json
+MyConfiguration-debug.json
+```
+
+### Ad-hoc configs
+
+Sometimes you feel like adding a twist, and set up a config file that
+just tunes a global parameter:
+
+```
+server misc,easter-colors,debug
+```
+
+However, since it's global parameter you don't want to maintain a
+``MyConfiguration-easter-colors.yaml`` file for all apps!  No problem,
+just add a ``easter-colors.yaml`` to the mix:
+
+```
+common-config.yaml
+MyConfiguration.json
+MyConfiguration-misc.json
+easter-colors.yaml
 MyConfiguration-debug.json
 ```
 

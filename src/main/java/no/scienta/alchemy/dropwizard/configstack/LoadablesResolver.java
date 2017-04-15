@@ -72,7 +72,7 @@ class LoadablesResolver<C extends Configuration> {
                 Arrays.stream(stack).flatMap(string -> Stream.concat(
                         Arrays.stream(Suffix.values()).map(suff -> suff.suffixed(string)),
                         resolver.stackedConfig(string)))
-        ).flatMap(Function.identity()).collect(Collectors.toList());
+        ).flatMap(Function.identity()).distinct().collect(Collectors.toList());
     }
 
     private Stream<Loadable> read(String path) {
@@ -86,7 +86,6 @@ class LoadablesResolver<C extends Configuration> {
     private String[] stackedElements(String input) {
         return Arrays.stream(input.split("[^.a-zA-Z_0-9\\-]+"))
                 .filter(s -> !s.trim().isEmpty())
-                .map(Suffix::unsuffixed)
                 .toArray(String[]::new);
     }
 

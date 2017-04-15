@@ -13,7 +13,7 @@ enum Suffix {
     }
 
     String suffixed(String path) {
-        return path + "." + name().toLowerCase();
+        return anySuffix(path) ? path : path + "." + name().toLowerCase();
     }
 
     static String unsuffixed(String path) {

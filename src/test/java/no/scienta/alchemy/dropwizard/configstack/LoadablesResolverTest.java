@@ -61,6 +61,17 @@ public class LoadablesResolverTest {
     }
 
     @Test
+    public void testBaseAndDashingStacks() {
+        List<Loadable> loadables = resolver(
+                base(JSON),
+                stacked("debug-dev", JSON)
+        ).resolveLoadables("debug-dev");
+        assertThat(loadables, are(
+                base(JSON),
+                stacked("debug-dev", JSON)));
+    }
+
+    @Test
     public void testBaseAndStackedMixedFormats() {
         List<Loadable> loadables = resolver(
                 base(YAML),
@@ -123,17 +134,19 @@ public class LoadablesResolverTest {
                 JSON.suffixed("serverlogging"),
                 base(JSON),
                 stacked("prod", JSON),
+                stacked("prod-cloud", YAML),
                 YAML.suffixed("misc"),
                 JSON.suffixed("foo"),
                 JSON.suffixed("bar")
         );
-        assertThat(resolver.resolveLoadables("foo,prod,bar"), are(
+        assertThat(resolver.resolveLoadables("foo,prod,bar,prod-cloud"), are(
                 YAML.suffixed("logging"),
                 JSON.suffixed("serverlogging"),
                 base(JSON),
                 JSON.suffixed("foo"),
                 stacked("prod", JSON),
-                JSON.suffixed("bar")
+                JSON.suffixed("bar"),
+                stacked("prod-cloud", YAML)
         ));
     }
 
@@ -149,7 +162,7 @@ public class LoadablesResolverTest {
                 JSON.suffixed("foo"),
                 JSON.suffixed("bar")
         );
-        assertThat(resolver.resolveLoadables("foo.json,prod,bar.json"), are(
+        assertThat(resolver.resolveLoadables("foo.json,prod,misc.json,notfound.yaml,bar.json"), are(
                 YAML.suffixed("logging"),
                 JSON.suffixed("serverlogging"),
                 base(JSON),
