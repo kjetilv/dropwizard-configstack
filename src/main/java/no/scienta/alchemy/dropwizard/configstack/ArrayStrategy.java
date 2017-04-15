@@ -1,7 +1,7 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
 /**
- * How to combine a base array with and override array.
+ * How to combine a base array with an override array.
  */
 public enum ArrayStrategy {
 
