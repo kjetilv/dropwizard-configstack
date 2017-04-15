@@ -23,9 +23,9 @@ class StackingConfigurationSourceProvider<C extends Configuration> implements Co
 
     private final ArrayStrategy arrayStrategy;
 
-    private final boolean variableReplacements;
+    private final boolean substituteVariables;
 
-    private final JsonReplacer.Replacer replacer;
+    private final Substitutor substitutor;
 
     private final ProgressLogger progressLogger;
 
@@ -40,8 +40,8 @@ class StackingConfigurationSourceProvider<C extends Configuration> implements Co
     StackingConfigurationSourceProvider(Bootstrap<C> bootstrap,
                                         ConfigResolver<C> resolver,
                                         ArrayStrategy arrayStrategy,
-                                        boolean variableReplacements,
-                                        JsonReplacer.Replacer replacer,
+                                        boolean substituteVariables,
+                                        Substitutor substitutor,
                                         ProgressLogger progressLogger) {
         this.bootstrap = Objects.requireNonNull(bootstrap, "bootstrap");
         if (this.bootstrap.getConfigurationSourceProvider() instanceof StackingConfigurationSourceProvider) {
@@ -60,8 +60,8 @@ class StackingConfigurationSourceProvider<C extends Configuration> implements Co
                 Objects.requireNonNull(resolver, "resolver"),
                 this.progressLogger);
 
-        this.variableReplacements = variableReplacements;
-        this.replacer = replacer;
+        this.substituteVariables = substituteVariables;
+        this.substitutor = substitutor;
     }
 
     @Override
@@ -69,18 +69,18 @@ class StackingConfigurationSourceProvider<C extends Configuration> implements Co
         List<Loadable> prioritizedLoadables = loadablesResolver.resolveLoadables(path);
 
         JsonNode combined = combine(prioritizedLoadables);
-        JsonNode processed = variableReplacements ? replace(combined) : combined;
+        JsonNode processed = substituteVariables ? substitute(combined) : combined;
 
         String config = writeConfig(processed);
-        progressLogger.println("Combined config:\n\n  " + config.replaceAll("\n", "\n  "));
+        progressLogger.println("Combined config: " + config.replaceAll("\n", "\n  "));
         return new ByteArrayInputStream(config.getBytes(UTF_8));
     }
 
-    private JsonNode replace(JsonNode combined) {
-        JsonReplacer.Replacer replacer = this.replacer == null
-                ? new DefaultReplacer(System.getProperties(), System.getenv(), combined)
-                : this.replacer;
-        return JsonReplacer.replace(combined, replacer);
+    private JsonNode substitute(JsonNode combined) {
+        Substitutor replacer = this.substitutor == null
+                ? new DefaultSubstitutor(System.getProperties(), System.getenv(), combined)
+                : this.substitutor;
+        return JsonSubstitutor.substitute(combined, replacer);
     }
 
     private JsonNode combine(List<Loadable> loadables) {

@@ -6,12 +6,12 @@ import org.junit.Test;
 import static no.scienta.alchemy.dropwizard.configstack.JsonStuff.read;
 import static org.junit.Assert.*;
 
-public class JsonReplacerTest {
+public class JsonSubstitutorTest {
 
     @Test
-    public void replaceSimple() throws Exception {
+    public void substituteSimple() throws Exception {
         JsonNode jn1 = read("{ \"foo\": \"bar\"}");
-        JsonNode jnc = JsonReplacer.replace(jn1, value -> value + value);
+        JsonNode jnc = JsonSubstitutor.substitute(jn1, value -> value + value);
 
         assertNotNull(jnc);
         assertEquals(1, jnc.size());
@@ -20,9 +20,9 @@ public class JsonReplacerTest {
     }
 
     @Test
-    public void replaceStructure() throws Exception {
+    public void substituteStructure() throws Exception {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": \"bar\"}}");
-        JsonNode jnc = JsonReplacer.replace(jn1, value -> value + value);
+        JsonNode jnc = JsonSubstitutor.substitute(jn1, value -> value + value);
 
         assertNotNull(jnc);
         assertEquals(1, jnc.size());
@@ -32,9 +32,9 @@ public class JsonReplacerTest {
     }
 
     @Test
-    public void replaceArray() {
+    public void substituteArray() {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": [\"zip\", \"foo\"]}}");
-        JsonNode jnc = JsonReplacer.replace(jn1, value -> value + value);
+        JsonNode jnc = JsonSubstitutor.substitute(jn1, value -> value + value);
 
         assertNotNull(jnc);
         assertEquals(1, jnc.size());

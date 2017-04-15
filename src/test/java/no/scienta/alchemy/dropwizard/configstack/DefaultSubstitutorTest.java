@@ -8,14 +8,14 @@ import java.util.Properties;
 import static no.scienta.alchemy.dropwizard.configstack.JsonStuff.read;
 import static org.junit.Assert.*;
 
-public class DefaultReplacerTest {
+public class DefaultSubstitutorTest {
 
     @Test
-    public void replaceSimple() {
+    public void simple() {
         JsonNode jn1 = read("{ \"foo\": \"bar${bar}\"}");
         Properties properties = new Properties();
         properties.setProperty("bar", "zot");
-        JsonNode replace = JsonReplacer.replace(jn1, new DefaultReplacer(properties, null, jn1));
+        JsonNode replace = JsonSubstitutor.substitute(jn1, new DefaultSubstitutor(properties, null, jn1));
 
         assertNotNull(replace);
         assertEquals(1, replace.size());
@@ -24,11 +24,11 @@ public class DefaultReplacerTest {
     }
 
     @Test
-    public void replaceSimpleTwice() {
+    public void simpleTwice() {
         JsonNode jn1 = read("{ \"foo\": \"bar${bar}-${bar}-\"}");
         Properties properties = new Properties();
         properties.setProperty("bar", "zot");
-        JsonNode replace = JsonReplacer.replace(jn1, new DefaultReplacer(properties, null, jn1));
+        JsonNode replace = JsonSubstitutor.substitute(jn1, new DefaultSubstitutor(properties, null, jn1));
 
         assertNotNull(replace);
         assertEquals(1, replace.size());
@@ -37,11 +37,11 @@ public class DefaultReplacerTest {
     }
 
     @Test
-    public void replacePointed() {
+    public void pointer() {
         JsonNode jn1 = read("{ \"foo\": \"bar\", \"zot\": \"${/foo}\"}");
         Properties properties = new Properties();
         properties.setProperty("bar", "zot");
-        JsonNode replace = JsonReplacer.replace(jn1, new DefaultReplacer(properties, null, jn1));
+        JsonNode replace = JsonSubstitutor.substitute(jn1, new DefaultSubstitutor(properties, null, jn1));
 
         assertNotNull(replace);
         assertEquals(2, replace.size());

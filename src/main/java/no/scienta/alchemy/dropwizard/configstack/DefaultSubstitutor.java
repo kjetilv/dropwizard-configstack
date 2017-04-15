@@ -10,7 +10,7 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 import java.util.Map;
 import java.util.Properties;
 
-final class DefaultReplacer implements JsonReplacer.Replacer {
+final class DefaultSubstitutor implements Substitutor {
 
     private final Properties properties;
 
@@ -18,14 +18,14 @@ final class DefaultReplacer implements JsonReplacer.Replacer {
 
     private final JsonNode node;
 
-    DefaultReplacer(Properties properties, Map<String, String> env, JsonNode node) {
+    DefaultSubstitutor(Properties properties, Map<String, String> env, JsonNode node) {
         this.properties = properties;
         this.env = env;
         this.node = node;
     }
 
     @Override
-    public String replace(String value) {
+    public String subsitute(String value) {
         String workString = value;
         while (true) {
             String replaced = new StrSubstitutor(new Lookup(node), "${", "}", '\'')

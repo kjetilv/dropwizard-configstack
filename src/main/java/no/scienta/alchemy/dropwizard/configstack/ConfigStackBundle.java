@@ -17,22 +17,22 @@ class ConfigStackBundle<C extends Configuration> implements Bundle {
 
     private final boolean classpathResources;
 
-    private final boolean variableSubstitutions;
+    private final boolean substituteVariables;
 
-    private final JsonReplacer.Replacer replacer;
+    private final Substitutor substitutor;
 
     ConfigStackBundle(ConfigResolver resolver,
                       ProgressLogger progressLogger,
                       ArrayStrategy arrayStrategy,
                       boolean classpathResources,
-                      boolean variableSubstitutions,
-                      JsonReplacer.Replacer replacer) {
+                      boolean substituteVariables,
+                      Substitutor substitutor) {
         this.resolver = Objects.requireNonNull(resolver, "resolver");
         this.progressLogger = progressLogger;
         this.arrayStrategy = arrayStrategy;
         this.classpathResources = classpathResources;
-        this.variableSubstitutions = variableSubstitutions;
-        this.replacer = replacer;
+        this.substituteVariables = substituteVariables;
+        this.substitutor = substitutor;
     }
 
     @SuppressWarnings("unchecked")
@@ -55,8 +55,8 @@ class ConfigStackBundle<C extends Configuration> implements Bundle {
                 bootstrap,
                 resolver,
                 arrayStrategy,
-                variableSubstitutions,
-                replacer,
+                substituteVariables,
+                substitutor,
                 progressLogger);
     }
 
