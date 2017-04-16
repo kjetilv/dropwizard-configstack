@@ -39,6 +39,12 @@ bootstrap.addBundle(
         .bundle());
 ```
 
+A simpler method with these switches as defaults:
+
+```java
+bootstrap.addBundle
+    (ConfigStackBundler.defaults(MyConfiguration.class).bundle());
+```
 
 ### Resolution
 
@@ -65,7 +71,7 @@ config overrides the base config and the debug config has the last
 say.
 
 YAML resources are checked too, so if, say, the following resources
-exist, they will be found and loaded too:
+exist, they will be found and loaded:
 
 ```
 MyConfiguration.json
@@ -75,9 +81,11 @@ MyConfiguration-debug.yaml
 
 Finally, if the paths *do* exist as file names, they *will* be loaded in
 preference to whatever is on the classpath. This is the default behavior
-and we want to preserve that. In general, we check the bootstrap's
-existing config source provider for any data first. Only if it fails or
-returns null, we proceed to check the classpath.
+and we want to preserve that.
+
+In general, we check the bootstrap's existing config source provider
+for any data first. Only if it fails or returns null, do we proceed
+to check the classpath.
 
 ### Replacements
 
