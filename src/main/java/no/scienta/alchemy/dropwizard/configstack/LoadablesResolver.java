@@ -28,56 +28,82 @@ class LoadablesResolver<C extends Configuration> {
         this.progressLogger = Objects.requireNonNull(progressLogger, "progressLogger");
     }
 
-    List<Loadable> resolveLoadables(String path) {
-        String[] stack = stackedElements(path);
-        List<Loadable> loadables = paths(stack)
-                .flatMap(this::read)
+    /**
+     * Find the selection of loadable resources suggested by the server command.
+     *
+     * @param serverCommand The argument passed to the {@link io.dropwizard.cli.ServerCommand server command}
+     * @return Loadables
+     */
+    List<Loadable> resolveLoadables(String serverCommand) {
+
+        List<String> stack = stack(serverCommand);
+        List<Loadable> loadables = candidatePath(stack)
+                .flatMap(this::loadable)
                 .collect(Collectors.toList());
-        audit(stack, paths(stack), loadables);
+
+        failOnEmpty(stack, candidatePath(stack), loadables);
+        logProgress(stack, loadables);
+
         return loadables;
     }
 
-    private String[] stackedElements(String input) {
+    /**
+     * @param input Argument to {@code server} command
+     * @return Stack as list
+     */
+    private List<String> stack(String input) {
         return Arrays.stream(input.split("[^.a-zA-Z_0-9\\-]+"))
+                .filter(Objects::nonNull)
                 .filter(s -> !s.trim().isEmpty())
-                .toArray(String[]::new);
+                .collect(Collectors.toList());
     }
 
-    private Stream<String> paths(String[] stack) {
+    /**
+     * @param stack Input stack, see {@link #stack(String)}
+     * @return All candidate configuration paths
+     */
+    private Stream<String> candidatePath(List<String> stack) {
         return Stream.of(
                 resolver.commonConfig(),
                 resolver.baseConfig(),
-                Arrays.stream(stack)
-                        .flatMap(string ->
-                                Stream.concat(
-                                        Arrays.stream(Suffix.values()).map(suff -> suff.suffixed(string)),
-                                        resolver.stackedConfig(string))
-                        )
+                stack.stream().flatMap(string ->
+                        Stream.concat(
+                                Arrays.stream(Suffix.values()).map(suff -> suff.suffixed(string)),
+                                resolver.stackedConfig(string))
+                )
         ).flatMap(Function.identity()).distinct();
     }
 
-    private Stream<Loadable> read(String path) {
+    /**
+     * @param candidatePath Candidate path
+     * @return Stream of loadable data from path, or empty stream if no data was found
+     */
+    private Stream<Loadable> loadable(String candidatePath) {
         try {
-            return Stream.of(provider.open(path)).filter(Objects::nonNull).map(Loadable.forPath(path));
+            return Stream.of(provider.open(candidatePath))
+                    .filter(Objects::nonNull)
+                    .map(Loadable.forPath(candidatePath));
         } catch (Exception e) {
             return Stream.empty();
         }
     }
 
-    private void audit(String[] stack, Stream<String> paths, List<Loadable> loadables) {
+    private void failOnEmpty(List<String> stack, Stream<String> paths, List<Loadable> loadables) {
         if (loadables.isEmpty()) {
             throw new IllegalStateException(
                     "Warning: No configs found for " +
                             resolver.baseConfig().collect(Collectors.joining(", ")) +
-                            ", stack [" + String.join(", ", Arrays.asList(stack)) + "]" +
-                            Arrays.stream(stack)
+                            ", stack [" + String.join(", ", stack) + "]" +
+                            stack.stream()
                                     .flatMap(resolver::stackedConfig)
                                     .collect(Collectors.joining(", ")) +
                             ", paths: " + paths.collect(Collectors.joining(", ")));
         }
+    }
 
+    private void logProgress(List<String> stack, List<Loadable> loadables) {
         progressLogger.println(() -> getClass().getSimpleName() +
-                ": Resolved config stack [" + String.join(", ", Arrays.asList(stack)) + "] from paths:\n  " +
+                ": Resolved config stack [" + String.join(", ", stack) + "] from paths:\n  " +
                 loadables.stream().map(Loadable::toString).collect(Collectors.joining("\n  ")) +
                 "\n");
     }
