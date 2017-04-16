@@ -25,17 +25,16 @@ public class StackApp extends Application<StackAppConfiguration> {
                 .enable(JsonGenerator.Feature.IGNORE_UNKNOWN)
                 .enable(JsonGenerator.Feature.IGNORE_UNKNOWN)
                 .enable(SerializationFeature.INDENT_OUTPUT);
-        bootstrap.addBundle(new ConfigStackBundler<>(StackAppConfiguration.class)
-                .addCommonConfig( "common-config")
-                .enableClasspathResources()
+        bootstrap.addBundle(ConfigStackBundler.defaults(StackAppConfiguration.class)
+                .addCommonConfig("common-config", "stuff.json")
                 .setProgressLogger(string ->
-                        System.out.println("### Just testing: " + string))
-                .enableVariableSubstitutions()
+                        System.out.println("### Just testing: " + string.get()))
                 .bundle());
     }
 
     @Override
     public void run(StackAppConfiguration stackAppConfiguration, Environment environment)
             throws Exception {
+        log.info("Rock!");
     }
 }

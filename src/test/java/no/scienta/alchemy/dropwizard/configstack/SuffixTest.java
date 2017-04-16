@@ -25,11 +25,4 @@ public class SuffixTest {
         assertThat(YAML.isSuffixed("foo.yaml"), is(true));
         assertThat(YAML.isSuffixed("foo.json"), not(is(true)));
     }
-
-    @Test
-    public void unsuffixed() {
-        assertThat(Suffix.unsuffixed("foo.json"), is("foo"));
-        assertThat(Suffix.unsuffixed("fooz.yaml"), is("fooz"));
-        assertThat(Suffix.unsuffixed("fooz.txt"), is("fooz.txt"));
-    }
 }

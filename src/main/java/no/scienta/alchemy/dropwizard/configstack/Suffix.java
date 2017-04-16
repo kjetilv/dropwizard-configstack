@@ -1,7 +1,6 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 enum Suffix {
@@ -14,14 +13,6 @@ enum Suffix {
 
     String suffixed(String path) {
         return anySuffix(path) ? path : path + "." + name().toLowerCase();
-    }
-
-    static String unsuffixed(String path) {
-        return suffixOf(path).map(suffix -> path.substring(0, path.length() - suffix.name().length() - 1)).orElse(path);
-    }
-
-    static Optional<Suffix> suffixOf(String path) {
-        return suffixes().filter(suffix -> suffix.isSuffixed(path)).findAny();
     }
 
     static boolean anySuffix(String path) {

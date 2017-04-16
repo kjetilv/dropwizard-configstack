@@ -5,12 +5,13 @@ import io.dropwizard.Configuration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
 public class ConfigStackBundler<C extends Configuration> {
 
-    public ConfigStackBundler<C> defaults(Class<C> configurationClass) {
+    public static <C extends Configuration> ConfigStackBundler<C> defaults(Class<C> configurationClass) {
         return new ConfigStackBundler<>(configurationClass)
                 .enableClasspathResources()
                 .enableVariableSubstitutions();
@@ -20,20 +21,20 @@ public class ConfigStackBundler<C extends Configuration> {
 
     private ConfigResolver<C> resolver;
 
-    private final List<String> commonConfigs = new ArrayList<>();
+    private final List<String> common = new ArrayList<>();
+
+    private ArrayStrategy arrayStrategy = ArrayStrategy.OVERLAY;
+
+    private ProgressLogger progressLogger = DEFAULT_PROGRESS_LOGGER;
 
     private boolean classpathResources;
 
     private boolean variableSubstitutions;
 
-    private ArrayStrategy arrayStrategy = ArrayStrategy.OVERLAY;
-
-    private ProgressLogger progressLogger = System.out::println;
-
     private Substitutor substitutor;
 
     public ConfigStackBundler(Class<C> configurationClass) {
-        this.configurationClass = configurationClass;
+        this.configurationClass = Objects.requireNonNull(configurationClass, "configurationClass");
     }
 
     /**
@@ -43,12 +44,12 @@ public class ConfigStackBundler<C extends Configuration> {
      * @return this bundler
      */
     public ConfigStackBundler<C> setResolver(ConfigResolver<C> resolver) {
-        this.resolver = resolver;
+        this.resolver = Objects.requireNonNull(resolver, "resolver");
         return this;
     }
 
-    public ConfigStackBundler<C> addCommonConfig(String... commonConfigs) {
-        this.commonConfigs.addAll(Arrays.asList(commonConfigs));
+    public ConfigStackBundler<C> addCommonConfig(String... common) {
+        this.common.addAll(Arrays.asList(common));
         return this;
     }
 
@@ -85,14 +86,13 @@ public class ConfigStackBundler<C extends Configuration> {
     /**
      * Set a different replacer.
      *
-     * @param replacer Alternative replacer
+     * @param substitutor Alternative replacer
      * @return this bundler
      */
-    public ConfigStackBundler<C> setSubstitutor(Substitutor replacer) {
-        if (replacer != null) {
-            enableVariableSubstitutions();
-        }
-        this.substitutor = replacer;
+    public ConfigStackBundler<C> setSubstitutor(Substitutor substitutor) {
+        Objects.requireNonNull(substitutor, "substitutor");
+        enableVariableSubstitutions();
+        this.substitutor = substitutor;
         return this;
     }
 
@@ -103,7 +103,7 @@ public class ConfigStackBundler<C extends Configuration> {
      * @return this bundler
      */
     public ConfigStackBundler<C> setArrayStrategy(ArrayStrategy arrayStrategy) {
-        this.arrayStrategy = arrayStrategy;
+        this.arrayStrategy = Objects.requireNonNull(arrayStrategy, "arrayStrategy");
         return this;
     }
 
@@ -114,26 +114,36 @@ public class ConfigStackBundler<C extends Configuration> {
      * @return this bundler
      */
     public ConfigStackBundler<C> setProgressLogger(ProgressLogger progressLogger) {
-        this.progressLogger = progressLogger;
+        this.progressLogger = Objects.requireNonNull(progressLogger);
         return this;
+    }
+
+    /**
+     * Don't log progress.
+     *
+     * @return this bundler
+     */
+    public ConfigStackBundler<C> quiet() {
+        return setProgressLogger(s -> {
+        });
     }
 
     public ConfigStackBundle<C> bundle() {
         ConfigResolver<C> resolver = this.resolver == null
-                ? new BasenameVariationsResolver<>(configurationClass, commonConfigs.stream().toArray(String[]::new))
+                ? new BasenameVariationsResolver<>(configurationClass, common.stream().toArray(String[]::new))
                 : this.resolver;
-        progressLogger.println("Creating bundle for config " + configurationClass + "\n" +
-                (commonConfigs.isEmpty() ? "" : "  common: " + String.join(", ", commonConfigs) + "\n") +
+        progressLogger.println(() -> "Creating bundle for config " + configurationClass + "\n" +
+                (common.isEmpty() ? "" : "  common: " + String.join(", ", common) + "\n") +
                 ("  fall back to classpath: " + classpathResources + "\n") +
-                ("  variable substitutions: " + variableSubstitutions + "\n")
-        );
+                ("  variable substitutions: " + variableSubstitutions + "\n"));
         return new ConfigStackBundle<>(
                 resolver,
                 progressLogger,
                 arrayStrategy,
                 classpathResources,
                 variableSubstitutions,
-                substitutor
-        );
+                substitutor);
     }
+
+    static final ProgressLogger DEFAULT_PROGRESS_LOGGER = supplier -> System.out.println(supplier.get());
 }

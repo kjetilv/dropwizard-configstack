@@ -16,5 +16,6 @@ public class DebugModeTest {
     @Test
     public void startup() {
         assertThat(rule.getConfiguration().sub.mode, is("debug"));
+        assertThat(rule.getConfiguration().stuff, is("just some stuff"));
     }
 }

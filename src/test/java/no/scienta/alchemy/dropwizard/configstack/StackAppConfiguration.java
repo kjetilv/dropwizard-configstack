@@ -11,6 +11,8 @@ public class StackAppConfiguration extends BaseConfiguration {
 
     public SubConfiguration sub;
 
+    public String stuff;
+
     public static class SubConfiguration {
 
         public String mode;

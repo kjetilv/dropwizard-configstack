@@ -1,7 +1,6 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
 import com.google.common.io.ByteStreams;
-import io.dropwizard.Configuration;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -15,8 +14,6 @@ final class Loadable {
 
     private final byte[] contents;
 
-    private final String streamString;
-
     static Function<InputStream, Loadable> forPath(String path) {
         return stream -> new Loadable(path, stream);
     }
@@ -28,7 +25,6 @@ final class Loadable {
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to load from " + path, e);
         }
-        this.streamString = stream == null ? null : stream.toString();
     }
 
     String getPath() {
@@ -47,14 +43,10 @@ final class Loadable {
         return new ByteArrayInputStream(contents);
     }
 
-    private boolean startsWith(Class<? extends Configuration> configurationClass, String next) {
-        return path.toLowerCase().startsWith(configurationClass.getName() + next);
-    }
-
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "[" + path + ": " + (
-                contents == null ? "unresolved" : contents.length + " bytes <= " + streamString
-        ) + "]";
+        return getClass().getSimpleName() + "[" +
+                path + ": " + (contents == null ? "unresolved" : contents.length + " bytes") +
+                "]";
     }
 }

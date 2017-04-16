@@ -4,7 +4,6 @@ import io.dropwizard.Configuration;
 import io.dropwizard.configuration.ConfigurationSourceProvider;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -26,53 +25,35 @@ class LoadablesResolver<C extends Configuration> {
     LoadablesResolver(ConfigurationSourceProvider provider, ConfigResolver<C> resolver, ProgressLogger progressLogger) {
         this.provider = Objects.requireNonNull(provider, "provider");
         this.resolver = Objects.requireNonNull(resolver, "resolver");
-        this.progressLogger = progressLogger == null ? System.out::println : progressLogger;
+        this.progressLogger = Objects.requireNonNull(progressLogger, "progressLogger");
     }
 
     List<Loadable> resolveLoadables(String path) {
         String[] stack = stackedElements(path);
-        List<String> paths = paths(stack);
-        List<Loadable> loadables = prioritize(read(paths), stack);
-        audit(stack, paths, loadables);
+        List<Loadable> loadables = paths(stack)
+                .flatMap(this::read)
+                .collect(Collectors.toList());
+        audit(stack, paths(stack), loadables);
         return loadables;
     }
 
-    private List<Loadable> read(List<String> paths) {
-        return paths.stream().flatMap(this::read).collect(Collectors.toList());
+    private String[] stackedElements(String input) {
+        return Arrays.stream(input.split("[^.a-zA-Z_0-9\\-]+"))
+                .filter(s -> !s.trim().isEmpty())
+                .toArray(String[]::new);
     }
 
-    private List<Loadable> prioritize(List<Loadable> loadables, String... stack) {
-        Comparator<Loadable> priority = priority(stack);
-        Stream<Loadable> sorted = loadables.stream().sorted(priority);
-        return sorted.collect(Collectors.toList());
-    }
-
-    private void audit(String[] stack, List<String> paths, List<Loadable> loadables) {
-        if (loadables.isEmpty()) {
-            throw new IllegalStateException(
-                    "Warning: No configs found for " +
-                            resolver.baseConfig().collect(Collectors.joining(", ")) +
-                            ", stack [" + String.join(", ", Arrays.asList(stack)) + "]" +
-                            Arrays.stream(stack)
-                                    .flatMap(resolver::stackedConfig)
-                                    .collect(Collectors.joining(", ")) +
-                            ", paths: " + String.join(", ", paths));
-        }
-
-        progressLogger.println(getClass().getSimpleName() +
-                ": Resolved config stack [" + String.join(", ", Arrays.asList(stack)) + "] from paths:\n  " +
-                loadables.stream().map(Loadable::toString).collect(Collectors.joining("\n  ")) +
-                "\n");
-    }
-
-    private List<String> paths(String[] stack) {
+    private Stream<String> paths(String[] stack) {
         return Stream.of(
                 resolver.commonConfig(),
                 resolver.baseConfig(),
-                Arrays.stream(stack).flatMap(string -> Stream.concat(
-                        Arrays.stream(Suffix.values()).map(suff -> suff.suffixed(string)),
-                        resolver.stackedConfig(string)))
-        ).flatMap(Function.identity()).distinct().collect(Collectors.toList());
+                Arrays.stream(stack)
+                        .flatMap(string ->
+                                Stream.concat(
+                                        Arrays.stream(Suffix.values()).map(suff -> suff.suffixed(string)),
+                                        resolver.stackedConfig(string))
+                        )
+        ).flatMap(Function.identity()).distinct();
     }
 
     private Stream<Loadable> read(String path) {
@@ -83,25 +64,22 @@ class LoadablesResolver<C extends Configuration> {
         }
     }
 
-    private String[] stackedElements(String input) {
-        return Arrays.stream(input.split("[^.a-zA-Z_0-9\\-]+"))
-                .filter(s -> !s.trim().isEmpty())
-                .toArray(String[]::new);
-    }
-
-    private Comparator<Loadable> priority(String... stack) {
-        return (l1, l2) -> position(l1) < position(l2) ? -1
-                : position(l1) > position(l2) ? 1
-                : 0;
-    }
-
-    private int position(Loadable loadable, String... stack) {
-        for (int i = 0; i < stack.length; i++) {
-            if (Suffix.anySuffix(loadable.getPath())) {
-                return i;
-            }
+    private void audit(String[] stack, Stream<String> paths, List<Loadable> loadables) {
+        if (loadables.isEmpty()) {
+            throw new IllegalStateException(
+                    "Warning: No configs found for " +
+                            resolver.baseConfig().collect(Collectors.joining(", ")) +
+                            ", stack [" + String.join(", ", Arrays.asList(stack)) + "]" +
+                            Arrays.stream(stack)
+                                    .flatMap(resolver::stackedConfig)
+                                    .collect(Collectors.joining(", ")) +
+                            ", paths: " + paths.collect(Collectors.joining(", ")));
         }
-        return -1;
+
+        progressLogger.println(() -> getClass().getSimpleName() +
+                ": Resolved config stack [" + String.join(", ", Arrays.asList(stack)) + "] from paths:\n  " +
+                loadables.stream().map(Loadable::toString).collect(Collectors.joining("\n  ")) +
+                "\n");
     }
 
     @Override

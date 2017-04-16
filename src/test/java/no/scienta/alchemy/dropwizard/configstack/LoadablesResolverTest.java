@@ -86,21 +86,21 @@ public class LoadablesResolverTest {
     public void testCommonConfigs() {
         LoadablesResolver<StackAppConfiguration> resolver = resolver(
                 commonConfigs("logging", "serverlogging", "notfound"),
-                YAML.suffixed("logging"),
-                JSON.suffixed("serverlogging"),
+                "logging.yaml",
+                "serverlogging.json",
                 base(JSON),
                 stacked("prod", YAML)
         );
 
         assertThat(resolver.resolveLoadables("prod"), are(
-                YAML.suffixed("logging"),
-                JSON.suffixed("serverlogging"),
+                "logging.yaml",
+                "serverlogging.json",
                 base(JSON),
                 stacked("prod", YAML)));
 
         assertThat(resolver.resolveLoadables(""), are(
-                YAML.suffixed("logging"),
-                JSON.suffixed("serverlogging"),
+                "logging.yaml",
+                "serverlogging.json",
                 base(JSON)));
     }
 
@@ -108,20 +108,20 @@ public class LoadablesResolverTest {
     public void testSimpleCustoms() {
         LoadablesResolver<StackAppConfiguration> resolver = resolver(
                 commonConfigs("logging", "serverlogging", "notfound"),
-                YAML.suffixed("logging"),
-                JSON.suffixed("serverlogging"),
+                "logging.yaml",
+                "serverlogging.json",
                 base(JSON),
                 stacked("prod", JSON),
-                YAML.suffixed("misc"),
-                JSON.suffixed("foo"),
-                JSON.suffixed("bar")
+                "misc.yaml",
+                "foo.json",
+                "bar.json"
         );
         assertThat(resolver.resolveLoadables("foo,misc,prod"), are(
-                YAML.suffixed("logging"),
-                JSON.suffixed("serverlogging"),
+                "logging.yaml",
+                "serverlogging.json",
                 base(JSON),
-                JSON.suffixed("foo"),
-                YAML.suffixed("misc"),
+                "foo.json",
+                "misc.yaml",
                 stacked("prod", JSON)
         ));
     }
@@ -130,22 +130,22 @@ public class LoadablesResolverTest {
     public void testIntermingledCustoms() {
         LoadablesResolver<StackAppConfiguration> resolver = resolver(
                 commonConfigs("logging", "serverlogging", "notfound"),
-                YAML.suffixed("logging"),
-                JSON.suffixed("serverlogging"),
+                "logging.yaml",
+                "serverlogging.json",
                 base(JSON),
                 stacked("prod", JSON),
                 stacked("prod-cloud", YAML),
-                YAML.suffixed("misc"),
-                JSON.suffixed("foo"),
-                JSON.suffixed("bar")
+                "misc.yaml",
+                "foo.json",
+                "bar.json"
         );
         assertThat(resolver.resolveLoadables("foo,prod,bar,prod-cloud"), are(
-                YAML.suffixed("logging"),
-                JSON.suffixed("serverlogging"),
+                "logging.yaml",
+                "serverlogging.json",
                 base(JSON),
-                JSON.suffixed("foo"),
+                "foo.json",
                 stacked("prod", JSON),
-                JSON.suffixed("bar"),
+                "bar.json",
                 stacked("prod-cloud", YAML)
         ));
     }
@@ -154,21 +154,21 @@ public class LoadablesResolverTest {
     public void testIntermingledCustomsWithSuffixes() {
         LoadablesResolver<StackAppConfiguration> resolver = resolver(
                 commonConfigs("logging", "serverlogging", "notfound"),
-                YAML.suffixed("logging"),
-                JSON.suffixed("serverlogging"),
+                "logging.yaml",
+                "serverlogging.json",
                 base(JSON),
                 stacked("prod", JSON),
-                YAML.suffixed("misc"),
-                JSON.suffixed("foo"),
-                JSON.suffixed("bar")
+                "misc.yaml",
+                "foo.json",
+                "bar.json"
         );
         assertThat(resolver.resolveLoadables("foo.json,prod,misc.json,notfound.yaml,bar.json"), are(
-                YAML.suffixed("logging"),
-                JSON.suffixed("serverlogging"),
+                "logging.yaml",
+                "serverlogging.json",
                 base(JSON),
-                JSON.suffixed("foo"),
+                "foo.json",
                 stacked("prod", JSON),
-                JSON.suffixed("bar")
+                "bar.json"
         ));
     }
 
@@ -184,7 +184,7 @@ public class LoadablesResolverTest {
         return new LoadablesResolver<>(
                 new MockedConfigurationSourceProvider(paths),
                 new BasenameVariationsResolver<>(StackAppConfiguration.class, commonConfigs),
-                progress::add);
+                supplier -> progress.add(supplier.get()));
     }
 
     private Matcher<Iterable<Loadable>> is(String path) {

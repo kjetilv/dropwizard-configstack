@@ -28,8 +28,8 @@ class ConfigStackBundle<C extends Configuration> implements Bundle {
                       boolean substituteVariables,
                       Substitutor substitutor) {
         this.resolver = Objects.requireNonNull(resolver, "resolver");
-        this.progressLogger = progressLogger;
-        this.arrayStrategy = arrayStrategy;
+        this.progressLogger = Objects.requireNonNull(progressLogger, "progressLogger");
+        this.arrayStrategy = Objects.requireNonNull(arrayStrategy, "arrayStrategy");
         this.classpathResources = classpathResources;
         this.substituteVariables = substituteVariables;
         this.substitutor = substitutor;
