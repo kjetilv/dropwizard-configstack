@@ -162,14 +162,16 @@ MyConfiguration-debug.json
 Logging the goings-on is a bit tricky. We are, after all,
 messing around with configuration, and that includes the log
 configuration, so the system doesn't know how to log yet!
-The default behavior is to write to stdout, but you can override that:
+The default behavior is to write to stdout, but you can override that
+with a custom implementation of ProgressLogger, which is basically a
+``Consumer<Supplier<String>>``:
 
 ```java
 bootstrap.addBundle(
     new ConfigStackBundler<>(StackAppConfiguration.class)
         .addCommonConfig( "common-config")
         .setProgressLogger(string ->
-            System.out.println("### Just testing: " + string))
+            System.out.println("### Just testing: " + string.get()))
         .enableClasspathResources()
         .enableVariableReplacements()
         .bundle());

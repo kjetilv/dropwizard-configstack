@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
 public class ConfigStackBundler<C extends Configuration> {
@@ -105,6 +107,10 @@ public class ConfigStackBundler<C extends Configuration> {
     public ConfigStackBundler<C> setArrayStrategy(ArrayStrategy arrayStrategy) {
         this.arrayStrategy = Objects.requireNonNull(arrayStrategy, "arrayStrategy");
         return this;
+    }
+
+    public ConfigStackBundler<C> setProgressLogger(Consumer<Supplier<String>> progressLogger) {
+        return setProgressLogger((ProgressLogger)progressLogger);
     }
 
     /**

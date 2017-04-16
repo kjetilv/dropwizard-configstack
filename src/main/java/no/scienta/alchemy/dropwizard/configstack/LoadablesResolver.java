@@ -35,23 +35,22 @@ class LoadablesResolver<C extends Configuration> {
      * @return Loadables
      */
     List<Loadable> resolveLoadables(String serverCommand) {
-
-        List<String> stack = stack(serverCommand);
+        List<String> stack = inputStack(serverCommand);
         List<Loadable> loadables = candidatePath(stack)
                 .flatMap(this::loadable)
                 .collect(Collectors.toList());
 
-        failOnEmpty(stack, candidatePath(stack), loadables);
+        failOnEmpty(stack, loadables);
         logProgress(stack, loadables);
 
         return loadables;
     }
 
     /**
-     * @param input Argument to {@code server} command
+     * @param input The argument to {@link io.dropwizard.cli.ServerCommand server} command
      * @return Stack as list
      */
-    private List<String> stack(String input) {
+    private List<String> inputStack(String input) {
         return Arrays.stream(input.split("[^.a-zA-Z_0-9\\-]+"))
                 .filter(Objects::nonNull)
                 .filter(s -> !s.trim().isEmpty())
@@ -59,7 +58,7 @@ class LoadablesResolver<C extends Configuration> {
     }
 
     /**
-     * @param stack Input stack, see {@link #stack(String)}
+     * @param stack Input stack, see {@link #inputStack(String)}
      * @return All candidate configuration paths
      */
     private Stream<String> candidatePath(List<String> stack) {
@@ -88,7 +87,7 @@ class LoadablesResolver<C extends Configuration> {
         }
     }
 
-    private void failOnEmpty(List<String> stack, Stream<String> paths, List<Loadable> loadables) {
+    private void failOnEmpty(List<String> stack, List<Loadable> loadables) {
         if (loadables.isEmpty()) {
             throw new IllegalStateException(
                     "Warning: No configs found for " +
@@ -97,7 +96,7 @@ class LoadablesResolver<C extends Configuration> {
                             stack.stream()
                                     .flatMap(resolver::stackedConfig)
                                     .collect(Collectors.joining(", ")) +
-                            ", paths: " + paths.collect(Collectors.joining(", ")));
+                            ", paths: " + candidatePath(stack).collect(Collectors.joining(", ")));
         }
     }
 
