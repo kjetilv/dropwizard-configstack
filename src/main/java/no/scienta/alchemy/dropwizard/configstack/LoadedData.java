@@ -11,7 +11,6 @@ import java.util.function.Function;
 /**
  * A configuration resource that was found and loaded.
  */
-@SuppressWarnings("WeakerAccess")
 public final class LoadedData {
 
     private final String path;

@@ -9,15 +9,12 @@ import java.util.function.BinaryOperator;
 import java.util.stream.IntStream;
 
 import static no.scienta.alchemy.dropwizard.configstack.ArrayStrategy.*;
-import static no.scienta.alchemy.dropwizard.configstack.JsonUtils.arrayNode;
-import static no.scienta.alchemy.dropwizard.configstack.JsonUtils.isNull;
+import static no.scienta.alchemy.dropwizard.configstack.JsonUtils.*;
 
 final class JsonCombiner {
 
     static BinaryOperator<JsonNode> create(ArrayStrategy arrayStrategy) {
-        return arrayStrategy == null
-                ? JsonCombiner::combine
-                : (j1, j2) -> combine(j1, j2, arrayStrategy);
+        return arrayStrategy == null ? JsonCombiner::combine : (j1, j2) -> combine(j1, j2, arrayStrategy);
     }
 
     /**
@@ -38,20 +35,12 @@ final class JsonCombiner {
      * @param override The override
      * @return New, combined node
      */
-    static JsonNode combine(JsonNode base, JsonNode override, ArrayStrategy arrays) {
+    static JsonNode combine(JsonNode base, JsonNode override, ArrayStrategy arrayStrategy) {
         return isNull(base) ? override
                 : isNull(override) ? base
-                : areObjects(base, override) ? combineObject((ObjectNode) base, (ObjectNode) override, arrays)
-                : areArrays(base, override) ? combineArray((ArrayNode) base, (ArrayNode) override, arrays)
+                : isObject(base, override) ? combineObject((ObjectNode) base, (ObjectNode) override, arrayStrategy)
+                : isArray(base, override) ? combineArray((ArrayNode) base, (ArrayNode) override, arrayStrategy)
                 : override;
-    }
-
-    private static boolean areObjects(JsonNode base, JsonNode override) {
-        return base.isObject() && override.isObject();
-    }
-
-    private static boolean areArrays(JsonNode base, JsonNode override) {
-        return base.isArray() && override.isArray();
     }
 
     private static ObjectNode combineObject(ObjectNode base, ObjectNode override, ArrayStrategy arrays) {
@@ -64,7 +53,7 @@ final class JsonCombiner {
     private static ArrayNode combineArray(ArrayNode base, ArrayNode override, ArrayStrategy arrays) {
         return arrays == null || arrays == OVERLAY ? overlay(base, override, arrays)
                 : arrays == REPLACE ? override
-                : sequence(base, override, arrays);
+                : sequence(base, override, arrays == APPEND);
     }
 
     private static ArrayNode overlay(ArrayNode base, ArrayNode override, ArrayStrategy arrays) {
@@ -74,10 +63,10 @@ final class JsonCombiner {
                 .reduce(JsonNodeFactory.instance.arrayNode(), ArrayNode::add, ArrayNode::addAll);
     }
 
-    private static ArrayNode sequence(ArrayNode base, ArrayNode override, ArrayStrategy arrays) {
+    private static ArrayNode sequence(ArrayNode base, ArrayNode override, boolean append) {
         ArrayNode node = arrayNode();
-        node.addAll(arrays == APPEND ? base : override);
-        node.addAll(arrays == APPEND ? override : base);
+        node.addAll(append ? base : override);
+        node.addAll(append ? override : base);
         return node;
     }
 
@@ -86,6 +75,5 @@ final class JsonCombiner {
     }
 
     private JsonCombiner() {
-
     }
 }
