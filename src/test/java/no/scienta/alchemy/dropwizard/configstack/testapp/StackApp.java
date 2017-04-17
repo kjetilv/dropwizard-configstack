@@ -1,4 +1,4 @@
-package no.scienta.alchemy.dropwizard.configstack;
+package no.scienta.alchemy.dropwizard.configstack.testapp;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import no.scienta.alchemy.dropwizard.configstack.ConfigStackBundler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +19,6 @@ public class StackApp extends Application<StackAppConfiguration> {
 
     @Override
     public void initialize(Bootstrap<StackAppConfiguration> bootstrap) {
-
         bootstrap.getObjectMapper()
                 .setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY)
                 .enable(MapperFeature.CAN_OVERRIDE_ACCESS_MODIFIERS)

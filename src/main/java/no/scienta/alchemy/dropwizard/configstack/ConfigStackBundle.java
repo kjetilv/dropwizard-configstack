@@ -11,7 +11,7 @@ import java.util.Objects;
 
 final class ConfigStackBundle implements Bundle {
 
-    private final ApplicationConfigurationResolver configResolver;
+    private final ConfigurationResolver configResolver;
 
     private final List<String> common;
 
@@ -31,7 +31,7 @@ final class ConfigStackBundle implements Bundle {
 
     private final StringSubstitutor substitutor;
 
-    ConfigStackBundle(ApplicationConfigurationResolver configResolver,
+    ConfigStackBundle(ConfigurationResolver configResolver,
                       List<String> common,
                       ProgressLogger progressLogger,
                       ArrayStrategy arrayStrategy,

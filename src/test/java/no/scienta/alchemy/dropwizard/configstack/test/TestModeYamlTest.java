@@ -1,6 +1,8 @@
-package no.scienta.alchemy.dropwizard.configstack;
+package no.scienta.alchemy.dropwizard.configstack.test;
 
 import io.dropwizard.testing.junit.DropwizardAppRule;
+import no.scienta.alchemy.dropwizard.configstack.testapp.StackApp;
+import no.scienta.alchemy.dropwizard.configstack.testapp.StackAppConfiguration;
 import org.junit.ClassRule;
 import org.junit.Test;
 

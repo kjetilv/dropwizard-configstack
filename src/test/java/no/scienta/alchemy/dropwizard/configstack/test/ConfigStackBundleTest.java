@@ -1,4 +1,4 @@
-package no.scienta.alchemy.dropwizard.configstack;
+package no.scienta.alchemy.dropwizard.configstack.test;
 
 import org.junit.Test;
 

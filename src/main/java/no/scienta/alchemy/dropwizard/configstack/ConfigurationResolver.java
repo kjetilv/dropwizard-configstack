@@ -6,7 +6,7 @@ import java.util.stream.Stream;
  * Responsible for providing the lookup-able resources for the
  * {@link io.dropwizard.Configuration configuration class} of an application.
  */
-public interface ApplicationConfigurationResolver {
+public interface ConfigurationResolver {
 
     /**
      * @return Resource for base config.

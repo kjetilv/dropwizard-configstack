@@ -33,7 +33,7 @@ It has a builder object – in this case a bundler, of course:
 
 ```java
 bootstrap.addBundle(
-    new ConfigStackBundler<>(MyConfiguration.class)
+    ConfigStackBundler.create(MyConfiguration.class)
         .enableClasspathResources()
         .enableVariableReplacements()
         .bundle());
@@ -43,7 +43,8 @@ A simpler method with these switches as defaults:
 
 ```java
 bootstrap.addBundle
-    (ConfigStackBundler.defaults(MyConfiguration.class).bundle());
+    (ConfigStackBundler.defaults(MyConfiguration.class)
+        .bundle());
 ```
 
 ### Resolution
@@ -186,11 +187,14 @@ resources you like.
 ```
 bootstrap.addBundle(
     new ConfigStackBundler<>(StackAppConfiguration.class)
-        .setResolver(new MyVeryOwnConfigResolver())
+        .setConfigurationResolver(new MyVeryOwnConfigResolver())
         .enableClasspathResources()
         .enableVariableReplacements()
         .bundle());
 ```
+
+This way, you can change the name of the base config, and decide
+on a different way to denote stacked configurations.
 
 ### Writing your own replacer
 

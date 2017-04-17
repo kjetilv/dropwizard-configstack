@@ -10,20 +10,32 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-@SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
+@SuppressWarnings("WeakerAccess")
 public final class ConfigStackBundler<C extends Configuration> {
 
     public static <C extends Configuration> ConfigStackBundler<C> defaults(Class<C> configurationClass) {
-        return new ConfigStackBundler<>(configurationClass)
+        return create(configurationClass)
                 .enableClasspathResources()
                 .enableVariableSubstitutions();
     }
 
+    public static <C extends Configuration> ConfigStackBundler<C> create(Class<C> configurationClass) {
+        return new ConfigStackBundler<>(configurationClass);
+    }
+
     private final Class<C> configurationClass;
 
-    private ApplicationConfigurationResolver resolver;
+    private ConfigurationResolver configurationResolver;
+
+    private ConfigurationLoader configurationLoader;
+
+    private ConfigurationCombiner configurationCombiner;
+
+    private ConfigurationSubstitutor configurationSubstitutor;
 
     private final List<String> common = new ArrayList<>();
+
+    private StringSubstitutor substitutor;
 
     private ArrayStrategy arrayStrategy = ArrayStrategy.OVERLAY;
 
@@ -33,26 +45,18 @@ public final class ConfigStackBundler<C extends Configuration> {
 
     private boolean variableSubstitutions;
 
-    private ConfigurationLoader configurationLoader;
-
-    private ConfigurationCombiner configurationCombiner;
-
-    private ConfigurationSubstitutor configurationSubstitutor;
-
-    private StringSubstitutor substitutor;
-
-    public ConfigStackBundler(Class<C> configurationClass) {
+    private ConfigStackBundler(Class<C> configurationClass) {
         this.configurationClass = Objects.requireNonNull(configurationClass, "configurationClass");
     }
 
     /**
      * Set an alternative resolver
      *
-     * @param resolver Resolver
+     * @param configurationResolver Resolver
      * @return this bundler
      */
-    public ConfigStackBundler<C> setResolver(ApplicationConfigurationResolver resolver) {
-        this.resolver = Objects.requireNonNull(resolver, "resolver");
+    public ConfigStackBundler<C> setConfigurationResolver(ConfigurationResolver configurationResolver) {
+        this.configurationResolver = Objects.requireNonNull(configurationResolver, "configurationResolver");
         return this;
     }
 
@@ -156,9 +160,9 @@ public final class ConfigStackBundler<C extends Configuration> {
     }
 
     public ConfigStackBundle bundle() {
-        ApplicationConfigurationResolver resolver = this.resolver == null
+        ConfigurationResolver resolver = this.configurationResolver == null
                 ? new BasenameVariationsResolver(configurationClass)
-                : this.resolver;
+                : this.configurationResolver;
         progressLogger.println(() -> "Creating bundle for config " + configurationClass + "\n" +
                 (common.isEmpty() ? "" : "  common: " + String.join(", ", common) + "\n") +
                 ("  fall back to classpath: " + classpathResources + "\n") +

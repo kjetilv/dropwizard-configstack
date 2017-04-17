@@ -32,7 +32,7 @@ import java.util.stream.Stream;
  * <li>Override with {@code AppConfig-localdev.json}</li>
  * </ul>
  */
-final class BasenameVariationsResolver implements ApplicationConfigurationResolver {
+final class BasenameVariationsResolver implements ConfigurationResolver {
 
     private final String baseConfig;
 

@@ -1,6 +1,7 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
 import io.dropwizard.configuration.ConfigurationSourceProvider;
+import no.scienta.alchemy.dropwizard.configstack.testapp.StackAppConfiguration;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;

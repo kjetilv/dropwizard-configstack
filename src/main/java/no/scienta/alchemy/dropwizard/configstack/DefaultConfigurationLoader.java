@@ -16,7 +16,7 @@ import java.util.stream.Stream;
  */
 final class DefaultConfigurationLoader implements ConfigurationLoader {
 
-    private final ApplicationConfigurationResolver configResolver;
+    private final ConfigurationResolver configResolver;
 
     private final List<String> commonConfigs;
 
@@ -30,7 +30,7 @@ final class DefaultConfigurationLoader implements ConfigurationLoader {
      * @param progressLogger How to log progress, may be null
      */
     DefaultConfigurationLoader(ConfigurationSourceProvider delegateProvider,
-                               ApplicationConfigurationResolver configResolver,
+                               ConfigurationResolver configResolver,
                                List<String> commonConfigs,
                                ProgressLogger progressLogger) {
         this.delegateProvider = Objects.requireNonNull(delegateProvider, "provider");
