@@ -1,7 +1,5 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
-import io.dropwizard.Configuration;
-
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Function;
@@ -34,30 +32,22 @@ import java.util.stream.Stream;
  * <li>Override with {@code AppConfig-localdev.json}</li>
  * </ul>
  */
-class BasenameVariationsResolver<C extends Configuration> implements ConfigResolver<C> {
-
-    private final String[] commonConfigs;
+final class BasenameVariationsResolver implements ApplicationConfigurationResolver {
 
     private final String baseConfig;
 
     /**
      * @param baseConfig Name of the base config
      */
-    BasenameVariationsResolver(Class<C> baseConfig, String... commonConfigs) {
-        this(Objects.requireNonNull(baseConfig, "baseConfig").getSimpleName(), commonConfigs);
+    BasenameVariationsResolver(Class<?> baseConfig) {
+        this(Objects.requireNonNull(baseConfig, "baseConfig").getSimpleName());
     }
 
-    private BasenameVariationsResolver(String baseConfig, String... commonConfigs) {
+    private BasenameVariationsResolver(String baseConfig) {
         this.baseConfig = Objects.requireNonNull(baseConfig, "baseConfig").trim();
         if (this.baseConfig.isEmpty()) {
             throw new IllegalStateException("baseConfig was empty string");
         }
-        this.commonConfigs = commonConfigs.clone();
-    }
-
-    @Override
-    public Stream<String> commonConfig() {
-        return Arrays.stream(commonConfigs).flatMap(this::suffixed);
     }
 
     @Override
@@ -68,10 +58,6 @@ class BasenameVariationsResolver<C extends Configuration> implements ConfigResol
     @Override
     public final Stream<String> stackedConfig(String stackedElement) {
         return variations(stackedElement);
-    }
-
-    private Stream<String> suffixed(String name) {
-        return Arrays.stream(Suffix.values()).map(stacked(name, ""));
     }
 
     private Stream<String> variations(String stackedElement) {

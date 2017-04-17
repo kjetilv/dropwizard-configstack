@@ -1,15 +1,19 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
+import com.google.common.collect.ImmutableList;
 import io.dropwizard.Bundle;
-import io.dropwizard.Configuration;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
-class ConfigStackBundle<C extends Configuration> implements Bundle {
+final class ConfigStackBundle implements Bundle {
 
-    private final ConfigResolver resolver;
+    private final ApplicationConfigurationResolver configResolver;
+
+    private final List<String> common;
 
     private final ProgressLogger progressLogger;
 
@@ -17,32 +21,48 @@ class ConfigStackBundle<C extends Configuration> implements Bundle {
 
     private final boolean classpathResources;
 
-    private final boolean substituteVariables;
+    private final boolean variableSubstitutions;
 
-    private final Substitutor substitutor;
+    private final ConfigurationLoader configurationLoader;
 
-    ConfigStackBundle(ConfigResolver resolver,
+    private final ConfigurationCombiner configurationCombiner;
+
+    private final ConfigurationSubstitutor configurationSubstitutor;
+
+    private final StringSubstitutor substitutor;
+
+    ConfigStackBundle(ApplicationConfigurationResolver configResolver,
+                      List<String> common,
                       ProgressLogger progressLogger,
                       ArrayStrategy arrayStrategy,
                       boolean classpathResources,
-                      boolean substituteVariables,
-                      Substitutor substitutor) {
-        this.resolver = Objects.requireNonNull(resolver, "resolver");
+                      boolean variableSubstitutions,
+                      ConfigurationLoader configurationLoader,
+                      ConfigurationCombiner configurationCombiner,
+                      ConfigurationSubstitutor configurationSubstitutor, StringSubstitutor substitutor) {
+        this.configResolver = Objects.requireNonNull(configResolver, "resolver");
+        this.common = common == null || common.isEmpty() ? Collections.emptyList() : ImmutableList.copyOf(common);
         this.progressLogger = Objects.requireNonNull(progressLogger, "progressLogger");
         this.arrayStrategy = Objects.requireNonNull(arrayStrategy, "arrayStrategy");
         this.classpathResources = classpathResources;
-        this.substituteVariables = substituteVariables;
+        this.variableSubstitutions = variableSubstitutions;
+        this.configurationLoader = configurationLoader;
+        this.configurationCombiner = configurationCombiner;
+        this.configurationSubstitutor = configurationSubstitutor;
         this.substitutor = substitutor;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void initialize(Bootstrap<?> bootstrap) {
+        if (bootstrap.getConfigurationSourceProvider() instanceof StackingConfigurationSourceProvider) {
+            throw new IllegalStateException
+                    ("Please set a different source provider: " + bootstrap.getConfigurationSourceProvider());
+        }
         if (classpathResources) {
             enableClasspathResources(bootstrap);
         }
-        StackingConfigurationSourceProvider<C> provider = buildProvider(bootstrap);
-        bootstrap.setConfigurationSourceProvider(provider);
+        bootstrap.setConfigurationSourceProvider(buildProvider(bootstrap));
     }
 
     private void enableClasspathResources(Bootstrap<?> bootstrap) {
@@ -50,13 +70,42 @@ class ConfigStackBundle<C extends Configuration> implements Bundle {
     }
 
     @SuppressWarnings("unchecked")
-    private StackingConfigurationSourceProvider<C> buildProvider(Bootstrap<?> bootstrap) {
-        return new StackingConfigurationSourceProvider<>(
-                bootstrap,
-                resolver,
-                arrayStrategy,
-                substituteVariables,
-                substitutor,
+    private StackingConfigurationSourceProvider buildProvider(Bootstrap<?> bootstrap) {
+        return new StackingConfigurationSourceProvider(
+                getConfigurationLoader(bootstrap),
+                getConfigurationResolver(bootstrap),
+                getConfigurationSubstitutor(),
+                bootstrap.getObjectMapper(),
+                progressLogger);
+    }
+
+    private ConfigurationSubstitutor getConfigurationSubstitutor() {
+        if (configurationSubstitutor != null) {
+            return configurationSubstitutor;
+        }
+        if (variableSubstitutions) {
+            return new DefaultConfigurationSubstitutor(substitutor);
+        }
+        return node -> node;
+    }
+
+    private ConfigurationCombiner getConfigurationResolver(Bootstrap<?> bootstrap) {
+        if (configurationCombiner != null) {
+            return configurationCombiner;
+        }
+        return new DefaultConfigurationCombiner(
+                bootstrap.getObjectMapper(),
+                arrayStrategy);
+    }
+
+    private ConfigurationLoader getConfigurationLoader(Bootstrap<?> bootstrap) {
+        if (configurationLoader != null) {
+            return configurationLoader;
+        }
+        return new DefaultConfigurationLoader(
+                bootstrap.getConfigurationSourceProvider(),
+                configResolver,
+                common,
                 progressLogger);
     }
 

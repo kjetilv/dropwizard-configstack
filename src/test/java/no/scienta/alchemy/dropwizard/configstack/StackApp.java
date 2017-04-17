@@ -18,6 +18,7 @@ public class StackApp extends Application<StackAppConfiguration> {
 
     @Override
     public void initialize(Bootstrap<StackAppConfiguration> bootstrap) {
+
         bootstrap.getObjectMapper()
                 .setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY)
                 .enable(MapperFeature.CAN_OVERRIDE_ACCESS_MODIFIERS)
@@ -25,16 +26,19 @@ public class StackApp extends Application<StackAppConfiguration> {
                 .enable(JsonGenerator.Feature.IGNORE_UNKNOWN)
                 .enable(JsonGenerator.Feature.IGNORE_UNKNOWN)
                 .enable(SerializationFeature.INDENT_OUTPUT);
-        bootstrap.addBundle(ConfigStackBundler.defaults(StackAppConfiguration.class)
-                .addCommonConfig("common-config", "stuff.json")
-                .setProgressLogger(string ->
-                        System.out.println("### Just testing: " + string.get()))
-                .bundle());
+
+        bootstrap.addBundle(
+                ConfigStackBundler.defaults(StackAppConfiguration.class)
+                        .addCommonConfig("common-config", "stuff.json")
+                        .setProgressLogger(string ->
+                                System.out.println("### Just testing: " + string.get()))
+                        .bundle());
     }
 
     @Override
     public void run(StackAppConfiguration stackAppConfiguration, Environment environment)
             throws Exception {
-        log.info("Rock!");
+
+        log.info("Final config:\n{}", environment.getObjectMapper().writeValueAsString(stackAppConfiguration));
     }
 }

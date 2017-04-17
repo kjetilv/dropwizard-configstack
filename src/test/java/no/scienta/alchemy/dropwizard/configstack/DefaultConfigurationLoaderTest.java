@@ -22,7 +22,7 @@ import static no.scienta.alchemy.dropwizard.configstack.Suffix.JSON;
 import static no.scienta.alchemy.dropwizard.configstack.Suffix.YAML;
 import static org.junit.Assert.assertThat;
 
-public class LoadablesResolverTest {
+public class DefaultConfigurationLoaderTest {
 
     private final Random random = new SecureRandom();
 
@@ -35,26 +35,26 @@ public class LoadablesResolverTest {
 
     @Test
     public void testBaseOnly() {
-        List<Loadable> loadable = resolver(
+        List<LoadedData> loadable = resolver(
                 base(JSON)
-        ).resolveLoadables("");
+        ).load("");
         assertThat(loadable, is(base(JSON)));
     }
 
     @Test
     public void testBaseOnlyYaml() {
-        List<Loadable> loadable = resolver(
+        List<LoadedData> loadable = resolver(
                 base(YAML)
-        ).resolveLoadables("");
+        ).load("");
         assertThat(loadable, is(base(YAML)));
     }
 
     @Test
     public void testBaseAndStacked() {
-        List<Loadable> loadables = resolver(
+        List<LoadedData> loadables = resolver(
                 base(JSON),
                 stacked("debug", JSON)
-        ).resolveLoadables("debug");
+        ).load("debug");
         assertThat(loadables, are(
                 base(JSON),
                 stacked("debug", JSON)));
@@ -62,10 +62,10 @@ public class LoadablesResolverTest {
 
     @Test
     public void testBaseAndDashingStacks() {
-        List<Loadable> loadables = resolver(
+        List<LoadedData> loadables = resolver(
                 base(JSON),
                 stacked("debug-dev", JSON)
-        ).resolveLoadables("debug-dev");
+        ).load("debug-dev");
         assertThat(loadables, are(
                 base(JSON),
                 stacked("debug-dev", JSON)));
@@ -73,10 +73,10 @@ public class LoadablesResolverTest {
 
     @Test
     public void testBaseAndStackedMixedFormats() {
-        List<Loadable> loadables = resolver(
+        List<LoadedData> loadables = resolver(
                 base(YAML),
                 stacked("debug", JSON)
-        ).resolveLoadables("debug");
+        ).load("debug");
         assertThat(loadables, are(
                 base(YAML),
                 stacked("debug", JSON)));
@@ -84,7 +84,7 @@ public class LoadablesResolverTest {
 
     @Test
     public void testCommonConfigs() {
-        LoadablesResolver<StackAppConfiguration> resolver = resolver(
+        ConfigurationLoader resolver = resolver(
                 commonConfigs("logging", "serverlogging", "notfound"),
                 "logging.yaml",
                 "serverlogging.json",
@@ -92,13 +92,13 @@ public class LoadablesResolverTest {
                 stacked("prod", YAML)
         );
 
-        assertThat(resolver.resolveLoadables("prod"), are(
+        assertThat(resolver.load("prod"), are(
                 "logging.yaml",
                 "serverlogging.json",
                 base(JSON),
                 stacked("prod", YAML)));
 
-        assertThat(resolver.resolveLoadables(""), are(
+        assertThat(resolver.load(""), are(
                 "logging.yaml",
                 "serverlogging.json",
                 base(JSON)));
@@ -106,7 +106,7 @@ public class LoadablesResolverTest {
 
     @Test
     public void testSimpleCustoms() {
-        LoadablesResolver<StackAppConfiguration> resolver = resolver(
+        ConfigurationLoader resolver = resolver(
                 commonConfigs("logging", "serverlogging", "notfound"),
                 "logging.yaml",
                 "serverlogging.json",
@@ -116,7 +116,7 @@ public class LoadablesResolverTest {
                 "foo.json",
                 "bar.json"
         );
-        assertThat(resolver.resolveLoadables("foo,misc,prod"), are(
+        assertThat(resolver.load("foo,misc,prod"), are(
                 "logging.yaml",
                 "serverlogging.json",
                 base(JSON),
@@ -128,7 +128,7 @@ public class LoadablesResolverTest {
 
     @Test
     public void testIntermingledCustoms() {
-        LoadablesResolver<StackAppConfiguration> resolver = resolver(
+        ConfigurationLoader resolver = resolver(
                 commonConfigs("logging", "serverlogging", "notfound"),
                 "logging.yaml",
                 "serverlogging.json",
@@ -139,7 +139,7 @@ public class LoadablesResolverTest {
                 "foo.json",
                 "bar.json"
         );
-        assertThat(resolver.resolveLoadables("foo,prod,bar,prod-cloud"), are(
+        assertThat(resolver.load("foo,prod,bar,prod-cloud"), are(
                 "logging.yaml",
                 "serverlogging.json",
                 base(JSON),
@@ -152,7 +152,7 @@ public class LoadablesResolverTest {
 
     @Test
     public void testIntermingledCustomsWithSuffixes() {
-        LoadablesResolver<StackAppConfiguration> resolver = resolver(
+        ConfigurationLoader resolver = resolver(
                 commonConfigs("logging", "serverlogging", "notfound"),
                 "logging.yaml",
                 "serverlogging.json",
@@ -162,7 +162,7 @@ public class LoadablesResolverTest {
                 "foo.json",
                 "bar.json"
         );
-        assertThat(resolver.resolveLoadables("foo.json,prod,misc.json,notfound.yaml,bar.json"), are(
+        assertThat(resolver.load("foo.json,prod,misc.json,notfound.yaml,bar.json"), are(
                 "logging.yaml",
                 "serverlogging.json",
                 base(JSON),
@@ -176,24 +176,25 @@ public class LoadablesResolverTest {
         return paths;
     }
 
-    private LoadablesResolver<StackAppConfiguration> resolver(String... paths) {
+    private ConfigurationLoader resolver(String... paths) {
         return resolver(new String[0], paths);
     }
 
-    private LoadablesResolver<StackAppConfiguration> resolver(String[] commonConfigs, String... paths) {
-        return new LoadablesResolver<>(
+    private ConfigurationLoader resolver(String[] commonConfigs, String... paths) {
+        return new DefaultConfigurationLoader(
                 new MockedConfigurationSourceProvider(paths),
-                new BasenameVariationsResolver<>(StackAppConfiguration.class, commonConfigs),
+                new BasenameVariationsResolver(StackAppConfiguration.class),
+                Arrays.asList(commonConfigs),
                 supplier -> progress.add(supplier.get()));
     }
 
-    private Matcher<Iterable<Loadable>> is(String path) {
+    private Matcher<Iterable<LoadedData>> is(String path) {
         return are(path);
     }
 
-    private Matcher<Iterable<Loadable>> are(String... paths) {
-        List<Matcher<Loadable>> matchers = Arrays.stream(paths).map(this::path).collect(Collectors.toList());
-        return new BaseMatcher<Iterable<Loadable>>() {
+    private Matcher<Iterable<LoadedData>> are(String... paths) {
+        List<Matcher<LoadedData>> matchers = Arrays.stream(paths).map(this::path).collect(Collectors.toList());
+        return new BaseMatcher<Iterable<LoadedData>>() {
             @Override
             public boolean matches(Object o) {
                 return o instanceof List<?> && paths.length == ((List) o).size() &&
@@ -205,7 +206,7 @@ public class LoadablesResolverTest {
             public void describeTo(Description description) {
                 description.appendText("List of [");
                 for (int i = 0; i < matchers.size(); i++) {
-                    Matcher<Loadable> matcher = matchers.get(i);
+                    Matcher<LoadedData> matcher = matchers.get(i);
                     description.appendText("\n  ");
                     matcher.describeTo(description);
                     if (i + 1 < matchers.size()) {
@@ -217,11 +218,11 @@ public class LoadablesResolverTest {
         };
     }
 
-    private Matcher<Loadable> path(String path) {
-        return new BaseMatcher<Loadable>() {
+    private Matcher<LoadedData> path(String path) {
+        return new BaseMatcher<LoadedData>() {
             @Override
             public boolean matches(Object o) {
-                return o instanceof Loadable && ((Loadable) o).getPath().equals(path);
+                return o instanceof LoadedData && ((LoadedData) o).getPath().equals(path);
             }
 
             @Override

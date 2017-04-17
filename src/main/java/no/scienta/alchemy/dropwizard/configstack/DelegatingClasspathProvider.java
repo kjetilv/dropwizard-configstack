@@ -1,7 +1,6 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
 import io.dropwizard.configuration.ConfigurationSourceProvider;
-import io.dropwizard.configuration.FileConfigurationSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 
 import java.io.File;
@@ -12,29 +11,25 @@ import java.io.InputStream;
  * Adult {@link ConfigurationSourceProvider} which properly uses the {@link Thread#currentThread()} and its
  * {@link Thread#contextClassLoader context class loader} to resolve a classpath resources.
  */
-class DelegatingClasspathProvider implements ConfigurationSourceProvider {
+final class DelegatingClasspathProvider implements ConfigurationSourceProvider {
 
     private final Bootstrap<?> bootstrap;
 
-    private final boolean fallbackIsFile;
-
     DelegatingClasspathProvider(Bootstrap<?> bootstrap) {
         this.bootstrap = bootstrap;
-        this.fallbackIsFile =
-                bootstrap.getConfigurationSourceProvider() instanceof FileConfigurationSourceProvider;
     }
 
     @Override
     public InputStream open(String path) throws IOException {
-        if (loadableAsFile(path)) {
-            InputStream config = openFileFallback(path);
-            if (config != null) { // Found as file
+        if (isAccessibleFile(path)) {
+            InputStream config = delegate(path);
+            if (config != null) {
                 return config;
             }
         }
         if (cl().getResource(path) != null) {
             InputStream config = cl().getResourceAsStream(path);
-            if (config != null) { // Found on classpath
+            if (config != null) {
                 return config;
             }
         }
@@ -47,11 +42,11 @@ class DelegatingClasspathProvider implements ConfigurationSourceProvider {
                 : Thread.currentThread().getContextClassLoader();
     }
 
-    private boolean loadableAsFile(String path) {
-        return fallbackIsFile && new File(path).isFile() && new File(path).canRead();
+    private boolean isAccessibleFile(String path) {
+        return new File(path).isFile() && new File(path).canRead();
     }
 
-    private InputStream openFileFallback(String path) {
+    private InputStream delegate(String path) {
         try {
             return bootstrap.getConfigurationSourceProvider().open(path);
         } catch (IOException ignore) {
@@ -62,9 +57,6 @@ class DelegatingClasspathProvider implements ConfigurationSourceProvider {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "[" +
-                bootstrap.getApplication().getConfigurationClass().getSimpleName() +
-                (fallbackIsFile ? ", checking files first" : "") +
-                "]";
+        return getClass().getSimpleName() + "[=>" + bootstrap.getConfigurationSourceProvider() + "]";
     }
 }

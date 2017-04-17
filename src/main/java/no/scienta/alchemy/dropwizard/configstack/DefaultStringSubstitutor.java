@@ -10,7 +10,7 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 import java.util.Map;
 import java.util.Properties;
 
-final class DefaultSubstitutor implements Substitutor {
+final class DefaultStringSubstitutor implements StringSubstitutor {
 
     private final Properties properties;
 
@@ -18,18 +18,18 @@ final class DefaultSubstitutor implements Substitutor {
 
     private final JsonNode node;
 
-    DefaultSubstitutor(Properties properties, Map<String, String> env, JsonNode node) {
+    DefaultStringSubstitutor(Properties properties, Map<String, String> env, JsonNode node) {
         this.properties = properties;
         this.env = env;
         this.node = node;
     }
 
     @Override
-    public String subsitute(String value) {
+    public String substitute(String value) {
         String workString = value;
         while (true) {
-            String replaced = new StrSubstitutor(new Lookup(node), "${", "}", '\'')
-                    .replace(workString);
+            StrSubstitutor strSubstitutor = new StrSubstitutor(new Lookup(node), "${", "}", '\'');
+            String replaced = strSubstitutor.replace(workString);
             if (replaced.equals(workString)) {
                 return workString;
             }
@@ -55,7 +55,7 @@ final class DefaultSubstitutor implements Substitutor {
         private JsonNode resolveJsonPointer(String key, JsonPointer pointer) {
             TreeNode pointed = ((TreeNode) node).at(pointer);
             return pointed == null || pointed.isMissingNode() || !pointed.isValueNode()
-                    ? fail(key)
+                    ? fail(key, "Unknown system property, env variable or JSON node")
                     : (JsonNode) pointed;
         }
 
@@ -63,13 +63,12 @@ final class DefaultSubstitutor implements Substitutor {
             try {
                 return JsonPointer.compile(key);
             } catch (IllegalArgumentException e) {
-                return fail(key);
+                return fail(key, "Unknown system property or env variable, and invalid JSON pointer");
             }
         }
 
-        private <T> T fail(String key) {
-            throw new IllegalArgumentException("Invalid variable reference <" + key + ">" +
-                    ", should be system property, environment variable or JSON pointer to config value");
+        private <T> T fail(String key, String problem) {
+            throw new IllegalArgumentException("Unknown variable reference '" + key + "': " + problem);
         }
     }
 }

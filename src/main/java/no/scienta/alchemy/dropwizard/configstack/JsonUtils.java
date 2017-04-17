@@ -25,6 +25,5 @@ final class JsonUtils {
     }
 
     private JsonUtils() {
-        // The stuff is private
     }
 }

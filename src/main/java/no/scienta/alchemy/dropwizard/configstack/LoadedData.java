@@ -11,7 +11,8 @@ import java.util.function.Function;
 /**
  * A configuration resource that was found and loaded.
  */
-final class Loadable {
+@SuppressWarnings("WeakerAccess")
+public final class LoadedData {
 
     private final String path;
 
@@ -21,16 +22,33 @@ final class Loadable {
      * @param path A path
      * @return A function that creates a loadable from the stream found at the path
      */
-    static Function<InputStream, Loadable> forPath(String path) {
-        return stream -> new Loadable(path, stream);
+    static Function<InputStream, LoadedData> forPath(String path) {
+        return stream -> create(path, stream);
     }
 
-    private Loadable(String path, InputStream stream) {
+    static LoadedData create(String path, InputStream stream) {
+        return new LoadedData(path, stream);
+    }
+
+    /**
+     * Loads and caches data from the stream, to be retrieved from {@link #getStream()} later.
+     *
+     * @param path The path
+     * @param stream The stream, ready for reading
+     */
+    private LoadedData(String path, InputStream stream) {
         this.path = Objects.requireNonNull(path, "path");
         try {
             this.contents = stream == null ? null : ByteStreams.toByteArray(stream);
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to load from " + path, e);
+        } finally {
+            try {
+                if (stream != null) {
+                    stream.close();
+                }
+            } catch (IOException ignore) {
+            }
         }
     }
 

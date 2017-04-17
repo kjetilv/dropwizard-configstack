@@ -1,0 +1,8 @@
+{
+  "flag": true,
+  "sub": {
+    "mode": "prod",
+    "remoteURI": "${/thereisnosuchfield}://${/server/nofieldlikethiseither}",
+    "bar": 10
+  }
+}

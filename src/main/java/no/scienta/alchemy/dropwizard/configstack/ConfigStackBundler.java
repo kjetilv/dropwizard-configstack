@@ -11,7 +11,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
-public class ConfigStackBundler<C extends Configuration> {
+public final class ConfigStackBundler<C extends Configuration> {
 
     public static <C extends Configuration> ConfigStackBundler<C> defaults(Class<C> configurationClass) {
         return new ConfigStackBundler<>(configurationClass)
@@ -21,7 +21,7 @@ public class ConfigStackBundler<C extends Configuration> {
 
     private final Class<C> configurationClass;
 
-    private ConfigResolver<C> resolver;
+    private ApplicationConfigurationResolver resolver;
 
     private final List<String> common = new ArrayList<>();
 
@@ -33,7 +33,13 @@ public class ConfigStackBundler<C extends Configuration> {
 
     private boolean variableSubstitutions;
 
-    private Substitutor substitutor;
+    private ConfigurationLoader configurationLoader;
+
+    private ConfigurationCombiner configurationCombiner;
+
+    private ConfigurationSubstitutor configurationSubstitutor;
+
+    private StringSubstitutor substitutor;
 
     public ConfigStackBundler(Class<C> configurationClass) {
         this.configurationClass = Objects.requireNonNull(configurationClass, "configurationClass");
@@ -45,7 +51,7 @@ public class ConfigStackBundler<C extends Configuration> {
      * @param resolver Resolver
      * @return this bundler
      */
-    public ConfigStackBundler<C> setResolver(ConfigResolver<C> resolver) {
+    public ConfigStackBundler<C> setResolver(ApplicationConfigurationResolver resolver) {
         this.resolver = Objects.requireNonNull(resolver, "resolver");
         return this;
     }
@@ -75,14 +81,19 @@ public class ConfigStackBundler<C extends Configuration> {
         return this;
     }
 
-    /**
-     * Set a different replacer.
-     *
-     * @param substitutor Alternative replacer
-     * @return this bundler
-     */
-    public ConfigStackBundler<C> setSubstitutor(Function<String, String> substitutor) {
-        return setSubstitutor((Substitutor) substitutor);
+    public ConfigStackBundler<C> setConfigurationLoader(ConfigurationLoader configurationLoader) {
+        this.configurationLoader = configurationLoader;
+        return this;
+    }
+
+    public ConfigStackBundler<C> setConfigurationCombiner(ConfigurationCombiner configurationCombiner) {
+        this.configurationCombiner = configurationCombiner;
+        return this;
+    }
+
+    public ConfigStackBundler<C> setConfigurationSubstitutor(ConfigurationSubstitutor configurationSubstitutor) {
+        this.configurationSubstitutor = configurationSubstitutor;
+        return this;
     }
 
     /**
@@ -91,7 +102,17 @@ public class ConfigStackBundler<C extends Configuration> {
      * @param substitutor Alternative replacer
      * @return this bundler
      */
-    public ConfigStackBundler<C> setSubstitutor(Substitutor substitutor) {
+    public ConfigStackBundler<C> setSubstitutor(Function<String, String> substitutor) {
+        return setSubstitutor((StringSubstitutor) substitutor);
+    }
+
+    /**
+     * Set a different replacer.
+     *
+     * @param substitutor Alternative replacer
+     * @return this bundler
+     */
+    public ConfigStackBundler<C> setSubstitutor(StringSubstitutor substitutor) {
         Objects.requireNonNull(substitutor, "substitutor");
         enableVariableSubstitutions();
         this.substitutor = substitutor;
@@ -110,7 +131,7 @@ public class ConfigStackBundler<C extends Configuration> {
     }
 
     public ConfigStackBundler<C> setProgressLogger(Consumer<Supplier<String>> progressLogger) {
-        return setProgressLogger((ProgressLogger)progressLogger);
+        return setProgressLogger((ProgressLogger) progressLogger);
     }
 
     /**
@@ -134,20 +155,24 @@ public class ConfigStackBundler<C extends Configuration> {
         });
     }
 
-    public ConfigStackBundle<C> bundle() {
-        ConfigResolver<C> resolver = this.resolver == null
-                ? new BasenameVariationsResolver<>(configurationClass, common.stream().toArray(String[]::new))
+    public ConfigStackBundle bundle() {
+        ApplicationConfigurationResolver resolver = this.resolver == null
+                ? new BasenameVariationsResolver(configurationClass)
                 : this.resolver;
         progressLogger.println(() -> "Creating bundle for config " + configurationClass + "\n" +
                 (common.isEmpty() ? "" : "  common: " + String.join(", ", common) + "\n") +
                 ("  fall back to classpath: " + classpathResources + "\n") +
                 ("  variable substitutions: " + variableSubstitutions + "\n"));
-        return new ConfigStackBundle<>(
+        return new ConfigStackBundle(
                 resolver,
+                common,
                 progressLogger,
                 arrayStrategy,
                 classpathResources,
                 variableSubstitutions,
+                configurationLoader,
+                configurationCombiner,
+                configurationSubstitutor,
                 substitutor);
     }
 
