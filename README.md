@@ -1,5 +1,7 @@
 # Dropwizard Configstack
 
+[![Build Status](https://travis-ci.org/kjetilv/dropwizard-configstack.svg?branch=master)](https://travis-ci.org/kjetilv/dropwizard-configstack)
+
 This is the open-source version of some code I wrote to make
 configuration with Dropwizard more manageable. What I missed the most
 was, in no particular order:

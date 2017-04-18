@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -25,7 +25,7 @@ final class DefaultConfigurationCombiner implements ConfigurationCombiner {
     }
 
     @Override
-    public JsonNode compile(List<LoadedData> loadables) {
+    public JsonNode compile(Collection<LoadedData> loadables) {
         return loadables.stream()
                 .flatMap(this::readJson)
                 .reduce(null, JsonCombiner.create(arrayStrategy));

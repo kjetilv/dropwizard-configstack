@@ -25,7 +25,7 @@ public final class ConfigStackBundler<C extends Configuration> {
 
     private final Class<C> configurationClass;
 
-    private ConfigurationResolver configurationResolver;
+    private ConfigurationResourceResolver configurationResolver;
 
     private ConfigurationLoader configurationLoader;
 
@@ -55,7 +55,7 @@ public final class ConfigStackBundler<C extends Configuration> {
      * @param configurationResolver Resolver
      * @return this bundler
      */
-    public ConfigStackBundler<C> setConfigurationResolver(ConfigurationResolver configurationResolver) {
+    public ConfigStackBundler<C> setConfigurationResolver(ConfigurationResourceResolver configurationResolver) {
         this.configurationResolver = Objects.requireNonNull(configurationResolver, "configurationResolver");
         return this;
     }
@@ -160,8 +160,8 @@ public final class ConfigStackBundler<C extends Configuration> {
     }
 
     public ConfigStackBundle bundle() {
-        ConfigurationResolver resolver = this.configurationResolver == null
-                ? new BasenameVariationsResolver(configurationClass)
+        ConfigurationResourceResolver resolver = this.configurationResolver == null
+                ? new BasenameVariationsResourceResolver(configurationClass)
                 : this.configurationResolver;
         progressLogger.println(() -> "Creating bundle for config " + configurationClass + "\n" +
                 (common.isEmpty() ? "" : "  common: " + String.join(", ", common) + "\n") +

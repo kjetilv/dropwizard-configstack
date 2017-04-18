@@ -3,10 +3,7 @@ package no.scienta.alchemy.dropwizard.configstack;
 import com.google.common.collect.ImmutableList;
 import io.dropwizard.configuration.ConfigurationSourceProvider;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -16,7 +13,7 @@ import java.util.stream.Stream;
  */
 final class DefaultConfigurationLoader implements ConfigurationLoader {
 
-    private final ConfigurationResolver configResolver;
+    private final ConfigurationResourceResolver configurationResourceResolver;
 
     private final List<String> commonConfigs;
 
@@ -25,17 +22,17 @@ final class DefaultConfigurationLoader implements ConfigurationLoader {
     private final ConfigurationSourceProvider delegateProvider;
 
     /**
-     * @param configResolver How to resolve base config and stacked elements
-     * @param commonConfigs  Common resources to be loaded across apps
-     * @param progressLogger How to log progress, may be null
+     * @param configurationResourceResolver How to resolve base config and stacked elements
+     * @param commonConfigs                 Common resources to be loaded across apps
+     * @param progressLogger                How to log progress, may be null
      */
     DefaultConfigurationLoader(ConfigurationSourceProvider delegateProvider,
-                               ConfigurationResolver configResolver,
+                               ConfigurationResourceResolver configurationResourceResolver,
                                List<String> commonConfigs,
                                ProgressLogger progressLogger) {
         this.delegateProvider = Objects.requireNonNull(delegateProvider, "provider");
 
-        this.configResolver = Objects.requireNonNull(configResolver, "configResolver");
+        this.configurationResourceResolver = Objects.requireNonNull(configurationResourceResolver, "configResolver");
         this.commonConfigs = commonConfigs == null || commonConfigs.isEmpty()
                 ? Collections.emptyList()
                 : ImmutableList.copyOf(commonConfigs);
@@ -43,9 +40,10 @@ final class DefaultConfigurationLoader implements ConfigurationLoader {
     }
 
     @Override
-    public List<LoadedData> load(String serverCommand) {
-        List<String> stack = inputStack(serverCommand);
-        List<LoadedData> loadables = candidatePath(stack)
+    public Collection<LoadedData> load(String serverCommand) {
+        Collection<String> stack = inputStack(serverCommand);
+        Collection<String> candidatePaths = candidatePaths(stack);
+        Collection<LoadedData> loadables = candidatePaths.stream()
                 .flatMap(this::loaded)
                 .collect(Collectors.toList());
 
@@ -59,7 +57,7 @@ final class DefaultConfigurationLoader implements ConfigurationLoader {
      * @param input The argument to {@link io.dropwizard.cli.ServerCommand server} command
      * @return Stack as list
      */
-    private List<String> inputStack(String input) {
+    private Collection<String> inputStack(String input) {
         return Arrays.stream(input.split("[^.a-zA-Z_0-9\\-]+"))
                 .filter(Objects::nonNull)
                 .filter(s -> !s.trim().isEmpty())
@@ -70,16 +68,19 @@ final class DefaultConfigurationLoader implements ConfigurationLoader {
      * @param stack Input stack, see {@link #inputStack(String)}
      * @return All candidate configuration paths
      */
-    private Stream<String> candidatePath(List<String> stack) {
+    private Collection<String> candidatePaths(Collection<String> stack) {
         return Stream.of(
-                commonConfigs.stream().flatMap(DefaultConfigurationLoader::suffixCandidates),
-                configResolver.baseConfig(),
+                suffixed(commonConfigs.stream()),
+                suffixed(configurationResourceResolver.baseResource()),
                 stack.stream().flatMap(string ->
                         Stream.concat(
-                                suffixCandidates(string),
-                                configResolver.stackedConfig(string))
-                )
-        ).flatMap(Function.identity()).distinct();
+                                suffixedCandidates(string),
+                                suffixed(configurationResourceResolver.stackedResource(string))))
+        ).flatMap(Function.identity()).distinct().collect(Collectors.toList());
+    }
+
+    private Stream<String> suffixed(Stream<String> stream) {
+        return stream.flatMap(DefaultConfigurationLoader::suffixedCandidates);
     }
 
     /**
@@ -96,32 +97,32 @@ final class DefaultConfigurationLoader implements ConfigurationLoader {
         }
     }
 
-    private void failOnEmpty(List<String> stack, List<LoadedData> loadables) {
+    private void failOnEmpty(Collection<String> stack, Collection<LoadedData> loadables) {
         if (loadables.isEmpty()) {
             throw new IllegalStateException(
                     "Warning: No configs found for " +
-                            configResolver.baseConfig().collect(Collectors.joining(", ")) +
+                            configurationResourceResolver.baseResource().collect(Collectors.joining(", ")) +
                             ", stack [" + String.join(", ", stack) + "]" +
                             stack.stream()
-                                    .flatMap(configResolver::stackedConfig)
+                                    .flatMap(configurationResourceResolver::stackedResource)
                                     .collect(Collectors.joining(", ")) +
-                            ", paths: " + candidatePath(stack).collect(Collectors.joining(", ")));
+                            ", paths: " + String.join(", ", candidatePaths(stack)));
         }
     }
 
-    private void logProgress(List<String> stack, List<LoadedData> loadables) {
+    private void logProgress(Collection<String> stack, Collection<LoadedData> loadables) {
         progressLogger.println(() -> getClass().getSimpleName() +
                 ": Resolved config stack [" + String.join(", ", stack) + "] from paths:\n  " +
                 loadables.stream().map(LoadedData::toString).collect(Collectors.joining("\n  ")) +
                 "\n");
     }
 
-    private static Stream<String> suffixCandidates(String name) {
-        return Arrays.stream(Suffix.values()).map(suffix -> suffix.suffixed(name));
+    private static Stream<String> suffixedCandidates(String name) {
+        return Arrays.stream(Suffix.values()).map(suffix -> suffix.suffixed(name)).distinct();
     }
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "[" + this.configResolver + " <= " + delegateProvider + "]";
+        return getClass().getSimpleName() + "[" + this.configurationResourceResolver + " <= " + delegateProvider + "]";
     }
 }

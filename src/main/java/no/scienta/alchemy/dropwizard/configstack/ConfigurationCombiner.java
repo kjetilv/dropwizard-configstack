@@ -2,7 +2,7 @@ package no.scienta.alchemy.dropwizard.configstack;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Responsible for compiling a set of {@link LoadedData data} into a single {@link JsonNode}.
@@ -16,5 +16,5 @@ public interface ConfigurationCombiner {
      * @param loadables Loadable data
      * @return Complete JSON AST
      */
-    JsonNode compile(List<LoadedData> loadables);
+    JsonNode compile(Collection<LoadedData> loadables);
 }

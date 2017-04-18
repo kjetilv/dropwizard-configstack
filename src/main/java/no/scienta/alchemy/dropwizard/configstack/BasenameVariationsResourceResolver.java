@@ -1,8 +1,6 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
-import java.util.Arrays;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -32,18 +30,18 @@ import java.util.stream.Stream;
  * <li>Override with {@code AppConfig-localdev.json}</li>
  * </ul>
  */
-final class BasenameVariationsResolver implements ConfigurationResolver {
+final class BasenameVariationsResourceResolver implements ConfigurationResourceResolver {
 
     private final String baseConfig;
 
     /**
      * @param baseConfig Name of the base config
      */
-    BasenameVariationsResolver(Class<?> baseConfig) {
+    BasenameVariationsResourceResolver(Class<?> baseConfig) {
         this(Objects.requireNonNull(baseConfig, "baseConfig").getSimpleName());
     }
 
-    private BasenameVariationsResolver(String baseConfig) {
+    private BasenameVariationsResourceResolver(String baseConfig) {
         this.baseConfig = Objects.requireNonNull(baseConfig, "baseConfig").trim();
         if (this.baseConfig.isEmpty()) {
             throw new IllegalStateException("baseConfig was empty string");
@@ -51,21 +49,13 @@ final class BasenameVariationsResolver implements ConfigurationResolver {
     }
 
     @Override
-    public final Stream<String> baseConfig() {
-        return variations("");
+    public final Stream<String> baseResource() {
+        return Stream.of(baseConfig);
     }
 
     @Override
-    public final Stream<String> stackedConfig(String stackedElement) {
-        return variations(stackedElement);
-    }
-
-    private Stream<String> variations(String stackedElement) {
-        return Arrays.stream(Suffix.values()).map(stacked(baseConfig, stackedElement));
-    }
-
-    private Function<Suffix, String> stacked(String baseConfig, String name) {
-        return suffix -> suffix.suffixed(baseConfig + variation(name));
+    public final Stream<String> stackedResource(String stackedElement) {
+        return Stream.of(baseConfig + variation(stackedElement));
     }
 
     private static String variation(String name) {

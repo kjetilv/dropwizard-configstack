@@ -11,28 +11,28 @@ import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-public class BasenameVariationsResolverTest {
+public class BasenameVariationsResourceResolverTest {
 
     @Test
     public void testBase() {
         assertConfigs(
-                resolver().baseConfig(),
-                "StackAppConfiguration.json", "StackAppConfiguration.yaml");
+                resolver().baseResource(),
+                "StackAppConfiguration");
     }
 
     @Test
     public void testStack() {
-        assertConfigs(resolver().stackedConfig("hurra"),
-                "StackAppConfiguration-hurra.json", "StackAppConfiguration-hurra.yaml");
+        assertConfigs(resolver().stackedResource("hurra"),
+                "StackAppConfiguration-hurra");
     }
 
     private void assertConfigs(Stream<String> stream, String... expected) {
         List<String> configs = stream.collect(Collectors.toList());
-        assertThat(configs.size(), is(Suffix.values().length));
+        assertThat(configs.size(), is(expected.length));
         assertThat(configs, hasItems(expected));
     }
 
-    private BasenameVariationsResolver resolver() {
-        return new BasenameVariationsResolver(StackAppConfiguration.class);
+    private BasenameVariationsResourceResolver resolver() {
+        return new BasenameVariationsResourceResolver(StackAppConfiguration.class);
     }
 }

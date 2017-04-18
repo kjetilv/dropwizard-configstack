@@ -1,6 +1,6 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Responsible for providing the content for a {@link io.dropwizard.cli.ServerCommand server command}
@@ -15,5 +15,5 @@ public interface ConfigurationLoader {
      * @param serverCommand The argument to the {@link io.dropwizard.cli.ServerCommand server command}
      * @return Loadable resources
      */
-    List<LoadedData> load(String serverCommand);
+    Collection<LoadedData> load(String serverCommand);
 }

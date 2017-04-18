@@ -12,10 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -36,7 +33,7 @@ public class DefaultConfigurationLoaderTest {
 
     @Test
     public void testBaseOnly() {
-        List<LoadedData> loadable = resolver(
+        Collection<LoadedData> loadable = resolver(
                 base(JSON)
         ).load("");
         assertThat(loadable, is(base(JSON)));
@@ -44,7 +41,7 @@ public class DefaultConfigurationLoaderTest {
 
     @Test
     public void testBaseOnlyYaml() {
-        List<LoadedData> loadable = resolver(
+        Collection<LoadedData> loadable = resolver(
                 base(YAML)
         ).load("");
         assertThat(loadable, is(base(YAML)));
@@ -52,7 +49,7 @@ public class DefaultConfigurationLoaderTest {
 
     @Test
     public void testBaseAndStacked() {
-        List<LoadedData> loadables = resolver(
+        Collection<LoadedData> loadables = resolver(
                 base(JSON),
                 stacked("debug", JSON)
         ).load("debug");
@@ -63,7 +60,7 @@ public class DefaultConfigurationLoaderTest {
 
     @Test
     public void testBaseAndDashingStacks() {
-        List<LoadedData> loadables = resolver(
+        Collection<LoadedData> loadables = resolver(
                 base(JSON),
                 stacked("debug-dev", JSON)
         ).load("debug-dev");
@@ -74,7 +71,7 @@ public class DefaultConfigurationLoaderTest {
 
     @Test
     public void testBaseAndStackedMixedFormats() {
-        List<LoadedData> loadables = resolver(
+        Collection<LoadedData> loadables = resolver(
                 base(YAML),
                 stacked("debug", JSON)
         ).load("debug");
@@ -184,7 +181,7 @@ public class DefaultConfigurationLoaderTest {
     private ConfigurationLoader resolver(String[] commonConfigs, String... paths) {
         return new DefaultConfigurationLoader(
                 new MockedConfigurationSourceProvider(paths),
-                new BasenameVariationsResolver(StackAppConfiguration.class),
+                new BasenameVariationsResourceResolver(StackAppConfiguration.class),
                 Arrays.asList(commonConfigs),
                 supplier -> progress.add(supplier.get()));
     }

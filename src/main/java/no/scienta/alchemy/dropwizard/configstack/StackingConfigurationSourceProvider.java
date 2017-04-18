@@ -8,6 +8,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -52,7 +53,7 @@ final class StackingConfigurationSourceProvider implements ConfigurationSourcePr
     }
 
     private JsonNode load(String serverCommand) {
-        List<LoadedData> loadedData = configurationLoader.load(serverCommand);
+        Collection<LoadedData> loadedData = configurationLoader.load(serverCommand);
         JsonNode combinedConfiguration = configurationCombiner.compile(loadedData);
         return configurationSubstitutor.substitute(combinedConfiguration);
     }
