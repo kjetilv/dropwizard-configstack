@@ -14,7 +14,9 @@ import static no.scienta.alchemy.dropwizard.configstack.JsonUtils.*;
 final class JsonCombiner {
 
     static BinaryOperator<JsonNode> create(ArrayStrategy arrayStrategy) {
-        return arrayStrategy == null ? JsonCombiner::combine : (j1, j2) -> combine(j1, j2, arrayStrategy);
+        return arrayStrategy == null
+                ? JsonCombiner::combine
+                : (j1, j2) -> combine(j1, j2, arrayStrategy);
     }
 
     /**

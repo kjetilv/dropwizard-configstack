@@ -9,6 +9,8 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import static no.scienta.alchemy.dropwizard.configstack.JsonUtils.objectNode;
+
 final class DefaultConfigurationCombiner implements ConfigurationCombiner {
 
     private final ObjectMapper objectMapper;
@@ -28,15 +30,14 @@ final class DefaultConfigurationCombiner implements ConfigurationCombiner {
     public JsonNode compile(Collection<LoadedData> loadables) {
         return loadables.stream()
                 .flatMap(this::readJson)
-                .reduce(null, JsonCombiner.create(arrayStrategy));
+                .reduce(objectNode(), JsonCombiner.create(arrayStrategy));
     }
 
     private Stream<JsonNode> readJson(LoadedData loadedData) {
         if (loadedData.hasContent()) {
             try {
                 JsonFactory factory = factory(objectMapper, loadedData);
-                JsonNode jsonNode =
-                        factory.createParser(loadedData.getStream()).readValueAsTree();
+                JsonNode jsonNode = factory.createParser(loadedData.getStream()).readValueAsTree();
                 return Stream.of(jsonNode);
             } catch (Exception e) {
                 throw new IllegalStateException(this + " failed to parse " + loadedData, e);
