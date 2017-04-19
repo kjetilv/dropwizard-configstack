@@ -11,12 +11,12 @@ import java.util.function.Supplier;
 public interface ProgressLogger extends Consumer<Supplier<String>> {
 
     @Override
-    default void accept(Supplier<String> info) {
-        println(info);
-    }
+    void accept(Supplier<String> info);
 
     /**
      * @param info Something that happened
      */
-    void println(Supplier<String> info);
+    default void println(Supplier<String> info) {
+        accept(info);
+    }
 }

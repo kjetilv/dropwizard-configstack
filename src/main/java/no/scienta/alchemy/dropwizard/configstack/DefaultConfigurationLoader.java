@@ -80,7 +80,8 @@ final class DefaultConfigurationLoader implements ConfigurationLoader {
     }
 
     private Stream<String> suffixed(Stream<String> stream) {
-        return stream.flatMap(DefaultConfigurationLoader::suffixedCandidates);
+        return stream == null ? Stream.empty()
+                : stream.flatMap(DefaultConfigurationLoader::suffixedCandidates);
     }
 
     /**
@@ -101,12 +102,8 @@ final class DefaultConfigurationLoader implements ConfigurationLoader {
         if (loadables.isEmpty()) {
             throw new IllegalStateException(
                     "Warning: No configs found for " +
-                            configurationResourceResolver.baseResource().collect(Collectors.joining(", ")) +
-                            ", stack [" + String.join(", ", stack) + "]" +
-                            stack.stream()
-                                    .flatMap(configurationResourceResolver::stackedResource)
-                                    .collect(Collectors.joining(", ")) +
-                            ", paths: " + String.join(", ", candidatePaths(stack)));
+                            " input stack: [" + String.join(", ", stack) + "]" +
+                            ", paths: [" + String.join(", ", candidatePaths(stack)) + "]");
         }
     }
 

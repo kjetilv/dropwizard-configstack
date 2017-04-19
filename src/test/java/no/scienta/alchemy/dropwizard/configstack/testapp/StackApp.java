@@ -27,12 +27,12 @@ public class StackApp extends Application<StackAppConfiguration> {
                 .enable(JsonGenerator.Feature.IGNORE_UNKNOWN)
                 .enable(SerializationFeature.INDENT_OUTPUT);
 
-        bootstrap.addBundle(
+        ConfigStackBundler<StackAppConfiguration> bundler =
                 ConfigStackBundler.defaults(StackAppConfiguration.class)
                         .addCommonConfig("common-config", "stuff.json")
                         .setProgressLogger(string ->
-                                System.out.println("### Just testing: " + string.get()))
-                        .bundle());
+                                System.out.println("### Just testing: " + string.get()));
+        bootstrap.addBundle(bundler.bundle());
     }
 
     @Override

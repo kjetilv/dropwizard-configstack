@@ -66,7 +66,7 @@ final class ConfigStackBundle implements Bundle {
     }
 
     private void enableClasspathResources(Bootstrap<?> bootstrap) {
-        bootstrap.setConfigurationSourceProvider(new DelegatingClasspathProvider(bootstrap));
+        bootstrap.setConfigurationSourceProvider(new ClasspathFallbackProvider(bootstrap));
     }
 
     @SuppressWarnings("unchecked")

@@ -107,7 +107,7 @@ public final class ConfigStackBundler<C extends Configuration> {
      * @return this bundler
      */
     public ConfigStackBundler<C> setSubstitutor(Function<String, String> substitutor) {
-        return setSubstitutor((StringSubstitutor) substitutor);
+        return setSubstitutor((StringSubstitutor) substitutor::apply);
     }
 
     /**
