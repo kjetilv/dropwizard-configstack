@@ -91,7 +91,7 @@ public final class ConfigStackBundler<C extends Configuration> {
      * {@link io.dropwizard.cli.ServerCommand server command} argument.
      *
      * @param configurationLoader Override configuration loader
-     * @return this hunder
+     * @return this bundler
      */
     public ConfigStackBundler<C> setConfigurationLoader(ConfigurationLoader configurationLoader) {
         this.configurationLoader = configurationLoader;
@@ -100,23 +100,30 @@ public final class ConfigStackBundler<C extends Configuration> {
 
     /**
      * Override the procedure for building a config from {@link LoadedData loaded data}.
-     * @param configurationBuilder
-     * @return
+     *
+     * @param configurationBuilder Override configuration builder
+     * @return this bundler
      */
     public ConfigStackBundler<C> setConfigurationBuilder(ConfigurationBuilder configurationBuilder) {
         this.configurationBuilder = configurationBuilder;
         return this;
     }
 
+    /**
+     * Override the procedure for performing substitutions on a loaded configuration
+     *
+     * @param configurationSubstitutor Overrider configuration substitutor
+     * @return this bundler
+     */
     public ConfigStackBundler<C> setConfigurationSubstitutor(ConfigurationSubstitutor configurationSubstitutor) {
         this.configurationSubstitutor = configurationSubstitutor;
         return this;
     }
 
     /**
-     * Set a different replacer.
+     * Set a different string replacer, which will be used by the default {@link ConfigurationSubstitutor}.
      *
-     * @param substitutor Alternative replacer
+     * @param substitutor Override string replacer
      * @return this bundler
      */
     public ConfigStackBundler<C> setSubstitutor(Function<String, String> substitutor) {
@@ -124,9 +131,9 @@ public final class ConfigStackBundler<C extends Configuration> {
     }
 
     /**
-     * Set a different replacer.
+     * Set a different string replacer, which will be used by the default {@link ConfigurationSubstitutor}.
      *
-     * @param substitutor Alternative replacer
+     * @param substitutor Override replacer
      * @return this bundler
      */
     public ConfigStackBundler<C> setSubstitutor(StringSubstitutor substitutor) {
@@ -137,7 +144,8 @@ public final class ConfigStackBundler<C extends Configuration> {
     }
 
     /**
-     * How to combine arrays.  If not set, {@link ArrayStrategy#OVERLAY} is used.
+     * Set a different array strategy, to be used by the default {@link ConfigurationBuilder}.  If not set,
+     * {@link ArrayStrategy#OVERLAY} is used.
      *
      * @param arrayStrategy How to combine arrays
      * @return this bundler
@@ -147,6 +155,12 @@ public final class ConfigStackBundler<C extends Configuration> {
         return this;
     }
 
+    /**
+     * Set a progress logger.
+     *
+     * @param progressLogger Progress logger
+     * @return this bundler
+     */
     public ConfigStackBundler<C> setProgressLogger(Consumer<Supplier<String>> progressLogger) {
         return setProgressLogger((ProgressLogger) progressLogger);
     }
@@ -169,6 +183,7 @@ public final class ConfigStackBundler<C extends Configuration> {
      */
     public ConfigStackBundler<C> quiet() {
         return setProgressLogger(s -> {
+            // ignore
         });
     }
 
