@@ -11,24 +11,24 @@ import java.util.stream.Collectors;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class DefaultConfigurationCombinerTest {
+public class DefaultConfigurationBuilderTest {
 
     @Test
-    public void compile() {
-        JsonNode node = compile("logging.json", "serverlogging.json");
+    public void testBuild() {
+        JsonNode node = testBuild("logging.json", "serverlogging.json");
         JsonNode appenders = node.get("logging").get("appenders");
         assertThat(appenders.size(), is(2));
         assertThat(appenders.get(1).get("type").asText(), is("file"));
     }
 
-    private JsonNode compile(String... paths) {
-        DefaultConfigurationCombiner combiner =
-                new DefaultConfigurationCombiner(new ObjectMapper(), ArrayStrategy.OVERLAY);
+    private JsonNode testBuild(String... paths) {
+        DefaultConfigurationBuilder combiner =
+                new DefaultConfigurationBuilder(new ObjectMapper(), ArrayStrategy.OVERLAY);
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         List<LoadedData> data =
                 Arrays.stream(paths)
                         .map(path -> LoadedData.create(path, contextClassLoader.getResourceAsStream(path)))
                         .collect(Collectors.toList());
-        return combiner.compile(data);
+        return combiner.build(data);
     }
 }

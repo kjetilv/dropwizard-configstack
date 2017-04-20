@@ -67,12 +67,12 @@ public class ConfigStackBundlerTest {
     }
 
     @Test
-    public void testSetCustomCombiner() {
-        ConfigurationCombiner combiner = mock(ConfigurationCombiner.class);
-        when(combiner.compile(anyCollection())).thenReturn(JsonNodeFactory.instance.objectNode());
+    public void testSetCustomBuilder() {
+        ConfigurationBuilder combiner = mock(ConfigurationBuilder.class);
+        when(combiner.build(anyCollection())).thenReturn(JsonNodeFactory.instance.objectNode());
 
         ConfigStackBundle bundle = base()
-                .setConfigurationCombiner(combiner)
+                .setConfigurationBuilder(combiner)
                 .bundle();
         Bootstrap<StackAppConfiguration> bootstrap =
                 mount(bundle,
@@ -80,7 +80,7 @@ public class ConfigStackBundlerTest {
         StackingConfigurationSourceProvider provider = stackingProvider(bootstrap);
         InputStream open = provider.open("foo.json");
         assertNotNull(open);
-        verify(combiner, atLeastOnce()).compile(anyCollection());
+        verify(combiner, atLeastOnce()).build(anyCollection());
         assertFalse(progress.isEmpty());
     }
 

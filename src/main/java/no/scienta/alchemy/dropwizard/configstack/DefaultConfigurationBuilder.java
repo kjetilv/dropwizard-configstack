@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 
 import static no.scienta.alchemy.dropwizard.configstack.JsonUtils.objectNode;
 
-final class DefaultConfigurationCombiner implements ConfigurationCombiner {
+final class DefaultConfigurationBuilder implements ConfigurationBuilder {
 
     private final ObjectMapper objectMapper;
 
@@ -21,13 +21,13 @@ final class DefaultConfigurationCombiner implements ConfigurationCombiner {
      * @param objectMapper   Object mapper
      * @param arrayStrategy  How to combine config arrays, may be null
      */
-    DefaultConfigurationCombiner(ObjectMapper objectMapper, ArrayStrategy arrayStrategy) {
+    DefaultConfigurationBuilder(ObjectMapper objectMapper, ArrayStrategy arrayStrategy) {
         this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper");
         this.arrayStrategy = Objects.requireNonNull(arrayStrategy, "arrayStrategy");
     }
 
     @Override
-    public JsonNode compile(Collection<LoadedData> loadables) {
+    public JsonNode build(Collection<LoadedData> loadables) {
         return loadables.stream()
                 .flatMap(this::readJson)
                 .reduce(objectNode(), JsonCombiner.create(arrayStrategy));

@@ -9,14 +9,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 
 final class StackingConfigurationSourceProvider implements ConfigurationSourceProvider {
 
     private final ObjectMapper objectMapper;
 
-    private final ConfigurationCombiner configurationCombiner;
+    private final ConfigurationBuilder configurationBuilder;
 
     private final ConfigurationSubstitutor configurationSubstitutor;
 
@@ -25,12 +24,12 @@ final class StackingConfigurationSourceProvider implements ConfigurationSourcePr
     private final ProgressLogger progressLogger;
 
     StackingConfigurationSourceProvider(ConfigurationLoader configurationLoader,
-                                        ConfigurationCombiner configurationCombiner,
+                                        ConfigurationBuilder configurationBuilder,
                                         ConfigurationSubstitutor configurationSubstitutor,
                                         ObjectMapper objectMapper,
                                         ProgressLogger progressLogger) {
-        this.configurationCombiner =
-                Objects.requireNonNull(configurationCombiner, "configurationResolver");
+        this.configurationBuilder =
+                Objects.requireNonNull(configurationBuilder, "configurationResolver");
         this.configurationSubstitutor =
                 Objects.requireNonNull(configurationSubstitutor, "configurationSubstitutor");
         this.configurationLoader =
@@ -54,7 +53,7 @@ final class StackingConfigurationSourceProvider implements ConfigurationSourcePr
 
     private JsonNode load(String serverCommand) {
         Collection<LoadedData> loadedData = configurationLoader.load(serverCommand);
-        JsonNode combinedConfiguration = configurationCombiner.compile(loadedData);
+        JsonNode combinedConfiguration = configurationBuilder.build(loadedData);
         return configurationSubstitutor.substitute(combinedConfiguration);
     }
 

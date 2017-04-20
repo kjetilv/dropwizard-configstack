@@ -25,7 +25,7 @@ final class ConfigStackBundle implements Bundle {
 
     private final ConfigurationLoader configurationLoader;
 
-    private final ConfigurationCombiner configurationCombiner;
+    private final ConfigurationBuilder configurationBuilder;
 
     private final ConfigurationSubstitutor configurationSubstitutor;
 
@@ -38,7 +38,7 @@ final class ConfigStackBundle implements Bundle {
                       boolean classpathResources,
                       boolean variableSubstitutions,
                       ConfigurationLoader configurationLoader,
-                      ConfigurationCombiner configurationCombiner,
+                      ConfigurationBuilder configurationBuilder,
                       ConfigurationSubstitutor configurationSubstitutor, StringSubstitutor substitutor) {
         this.configResolver = Objects.requireNonNull(configResolver, "resolver");
         this.common = common == null || common.isEmpty() ? Collections.emptyList() : ImmutableList.copyOf(common);
@@ -47,7 +47,7 @@ final class ConfigStackBundle implements Bundle {
         this.classpathResources = classpathResources;
         this.variableSubstitutions = variableSubstitutions;
         this.configurationLoader = configurationLoader;
-        this.configurationCombiner = configurationCombiner;
+        this.configurationBuilder = configurationBuilder;
         this.configurationSubstitutor = configurationSubstitutor;
         this.substitutor = substitutor;
     }
@@ -89,11 +89,11 @@ final class ConfigStackBundle implements Bundle {
         return node -> node;
     }
 
-    private ConfigurationCombiner getConfigurationResolver(Bootstrap<?> bootstrap) {
-        if (configurationCombiner != null) {
-            return configurationCombiner;
+    private ConfigurationBuilder getConfigurationResolver(Bootstrap<?> bootstrap) {
+        if (configurationBuilder != null) {
+            return configurationBuilder;
         }
-        return new DefaultConfigurationCombiner(
+        return new DefaultConfigurationBuilder(
                 bootstrap.getObjectMapper(),
                 arrayStrategy);
     }

@@ -29,7 +29,7 @@ public final class ConfigStackBundler<C extends Configuration> {
 
     private ConfigurationLoader configurationLoader;
 
-    private ConfigurationCombiner configurationCombiner;
+    private ConfigurationBuilder configurationBuilder;
 
     private ConfigurationSubstitutor configurationSubstitutor;
 
@@ -66,7 +66,8 @@ public final class ConfigStackBundler<C extends Configuration> {
     }
 
     /**
-     * Enable classpath resources loading
+     * Enable classpath resources loading.  Inserts a provider which delegates to the existing provider, then
+     * falls back to classpath.
      *
      * @return this bundler
      */
@@ -76,7 +77,7 @@ public final class ConfigStackBundler<C extends Configuration> {
     }
 
     /**
-     * Turn variable substitutions on.
+     * Turn variable substitutions on.  Turns on use of a {@link ConfigurationSubstitutor} on the end result JSON.
      *
      * @return this bundler
      */
@@ -85,13 +86,25 @@ public final class ConfigStackBundler<C extends Configuration> {
         return this;
     }
 
+    /**
+     * Override procedure for {@link LoadedData loading data} based on a
+     * {@link io.dropwizard.cli.ServerCommand server command} argument.
+     *
+     * @param configurationLoader Override configuration loader
+     * @return this hunder
+     */
     public ConfigStackBundler<C> setConfigurationLoader(ConfigurationLoader configurationLoader) {
         this.configurationLoader = configurationLoader;
         return this;
     }
 
-    public ConfigStackBundler<C> setConfigurationCombiner(ConfigurationCombiner configurationCombiner) {
-        this.configurationCombiner = configurationCombiner;
+    /**
+     * Override the procedure for building a config from {@link LoadedData loaded data}.
+     * @param configurationBuilder
+     * @return
+     */
+    public ConfigStackBundler<C> setConfigurationBuilder(ConfigurationBuilder configurationBuilder) {
+        this.configurationBuilder = configurationBuilder;
         return this;
     }
 
@@ -175,7 +188,7 @@ public final class ConfigStackBundler<C extends Configuration> {
                 classpathResources,
                 variableSubstitutions,
                 configurationLoader,
-                configurationCombiner,
+                configurationBuilder,
                 configurationSubstitutor,
                 substitutor);
     }
