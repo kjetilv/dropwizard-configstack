@@ -18,7 +18,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class LogSetupModeTest {
 
     @ClassRule
-    public static DropwizardAppRule<StackAppConfiguration> rule =
+    public static final DropwizardAppRule<StackAppConfiguration> rule =
             new DropwizardAppRule<>(StackApp.class, "logging,serverlogging,debug");
 
     @Test

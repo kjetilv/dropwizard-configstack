@@ -16,7 +16,7 @@ public class MiscModeTest {
     }
 
     @ClassRule
-    public static DropwizardAppRule<StackAppConfiguration> rule =
+    public static final DropwizardAppRule<StackAppConfiguration> rule =
             new DropwizardAppRule<>(StackApp.class, "prod,misc");
 
     @Test

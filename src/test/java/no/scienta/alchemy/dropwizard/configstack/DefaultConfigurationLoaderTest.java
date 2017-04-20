@@ -20,7 +20,7 @@ public class DefaultConfigurationLoaderTest {
 
     private final Random random = new SecureRandom();
 
-    private List<String> progress = new ArrayList<>();
+    private final List<String> progress = new ArrayList<>();
 
     @After
     public void clear() {

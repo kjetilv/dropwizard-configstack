@@ -14,7 +14,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class TestModeYamlTest {
 
     @ClassRule
-    public static DropwizardAppRule<StackAppConfiguration> rule =
+    public static final DropwizardAppRule<StackAppConfiguration> rule =
             new DropwizardAppRule<>(StackApp.class, "test");
 
     @Test
