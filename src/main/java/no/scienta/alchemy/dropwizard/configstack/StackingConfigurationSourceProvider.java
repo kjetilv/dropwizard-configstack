@@ -52,13 +52,21 @@ final class StackingConfigurationSourceProvider implements ConfigurationSourcePr
     }
 
     private JsonNode load(String serverCommand) {
-        Collection<LoadedData> loadedData = configurationLoader.load(serverCommand);
-        JsonNode combinedConfiguration = configurationBuilder.build(loadedData);
-        return configurationSubstitutor.substitute(combinedConfiguration);
+        try {
+            Collection<LoadedData> loadedData = configurationLoader.load(serverCommand);
+            JsonNode combinedConfiguration = configurationBuilder.build(loadedData);
+            return configurationSubstitutor.substitute(combinedConfiguration);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to load server command '" + serverCommand + "'", e);
+        }
     }
 
     private void logResult(JsonNode node) {
-        progressLogger.println(() -> "End-result combined config: " + writeConfig(node));
+        try {
+            progressLogger.println(() -> "End-result combined config: " + writeConfig(node));
+        } catch (Exception e) {
+            progressLogger.println(() -> "Failed to serialize config for logging: " + e);
+        }
     }
 
     private String writeConfig(JsonNode combined) {
