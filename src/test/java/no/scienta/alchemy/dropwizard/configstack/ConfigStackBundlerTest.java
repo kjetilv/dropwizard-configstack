@@ -61,7 +61,7 @@ public class ConfigStackBundlerTest {
                         new MockedConfigurationSourceProvider(
                                 "foo.json",
                                 "debug.json"));
-        StackingConfigurationSourceProvider provider = stackingProvider(bootstrap);
+        StackingConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
         InputStream open = provider.open("debug.json");
         assertNotNull(open);
 
@@ -82,7 +82,7 @@ public class ConfigStackBundlerTest {
         Bootstrap<StackAppConfiguration> bootstrap =
                 mount(bundle,
                         new MockedConfigurationSourceProvider("foo.json"));
-        StackingConfigurationSourceProvider provider = stackingProvider(bootstrap);
+        StackingConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
         InputStream open = provider.open("foo.json");
         assertNotNull(open);
         verify(combiner, atLeastOnce()).build(anyCollection());
@@ -99,7 +99,7 @@ public class ConfigStackBundlerTest {
                 .setConfigurationLoader(loader)
                 .bundle();
         Bootstrap<StackAppConfiguration> bootstrap = mount(bundle, null);
-        StackingConfigurationSourceProvider provider = stackingProvider(bootstrap);
+        StackingConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
         InputStream open = provider.open("foo");
         assertNotNull(open);
         verify(loader, atLeastOnce()).load(eq("foo"));
@@ -115,7 +115,7 @@ public class ConfigStackBundlerTest {
                 .setConfigurationSubstitutor(sub)
                 .bundle();
         Bootstrap<StackAppConfiguration> bootstrap = mount(bundle, null);
-        StackingConfigurationSourceProvider provider = stackingProvider(bootstrap);
+        StackingConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
         InputStream open = provider.open("foo");
         assertNotNull(open);
         verify(sub, atLeastOnce()).substitute(any(JsonNode.class));
@@ -132,7 +132,7 @@ public class ConfigStackBundlerTest {
                 })
                 .bundle();
         Bootstrap<StackAppConfiguration> bootstrap = mount(bundle, null);
-        StackingConfigurationSourceProvider provider = stackingProvider(bootstrap);
+        StackingConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
         InputStream open = provider.open("foo");
         assertNotNull(open);
         assertTrue(called.get());
@@ -154,7 +154,7 @@ public class ConfigStackBundlerTest {
                         new StackAppConfiguration() {{
                             strings = new String[]{"winning!"};
                         }}));
-        InputStream debug = stackingProvider(bootstrap).open("debug");
+        InputStream debug = assertedStackingProvider(bootstrap).open("debug");
         StackAppConfiguration config =
                 objectMapper.readerFor(StackAppConfiguration.class).readValue(debug);
         assertThat(config.strings.length, is(1));
@@ -184,7 +184,7 @@ public class ConfigStackBundlerTest {
 
     private void assertNoProgress(ConfigStackBundle bundle) {
         Bootstrap<StackAppConfiguration> bootstrap = mount(bundle, null);
-        StackingConfigurationSourceProvider provider = stackingProvider(bootstrap);
+        StackingConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
         InputStream open = provider.open("foo");
         assertNotNull(open);
         assertTrue(progress.isEmpty());
@@ -196,7 +196,7 @@ public class ConfigStackBundlerTest {
                 .setProgressLogger(string -> progress.add(string.get()));
     }
 
-    private StackingConfigurationSourceProvider stackingProvider(Bootstrap<StackAppConfiguration> bootstrap) {
+    private StackingConfigurationSourceProvider assertedStackingProvider(Bootstrap<StackAppConfiguration> bootstrap) {
         ConfigurationSourceProvider provider =
                 bootstrap.getConfigurationSourceProvider();
         assertThat(provider, CoreMatchers.instanceOf(StackingConfigurationSourceProvider.class));
