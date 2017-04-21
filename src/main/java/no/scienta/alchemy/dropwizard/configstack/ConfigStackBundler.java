@@ -162,7 +162,7 @@ public final class ConfigStackBundler<C extends Configuration> {
      * @return this bundler
      */
     public ConfigStackBundler<C> setProgressLogger(Consumer<Supplier<String>> progressLogger) {
-        return setProgressLogger((ProgressLogger) progressLogger);
+        return setProgressLogger(progressLogger::accept);
     }
 
     /**

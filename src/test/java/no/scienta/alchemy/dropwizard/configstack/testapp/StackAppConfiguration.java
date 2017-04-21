@@ -13,6 +13,8 @@ public class StackAppConfiguration extends BaseConfiguration {
 
     public String stuff;
 
+    public String[] strings;
+
     public static class SubConfiguration {
 
         public String mode;

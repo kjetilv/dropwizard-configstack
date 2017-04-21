@@ -1,8 +1,10 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import io.dropwizard.configuration.ConfigurationSourceProvider;
+import io.dropwizard.jackson.Jackson;
 import io.dropwizard.setup.Bootstrap;
 import no.scienta.alchemy.dropwizard.configstack.testapp.StackApp;
 import no.scienta.alchemy.dropwizard.configstack.testapp.StackAppConfiguration;
@@ -12,18 +14,21 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static no.scienta.alchemy.dropwizard.configstack.Suffix.JSON;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class ConfigStackBundlerTest {
@@ -135,8 +140,49 @@ public class ConfigStackBundlerTest {
     }
 
     @Test
+    public void testArrayStrategy() throws IOException {
+        ConfigStackBundle bundle = base()
+                .setArrayStrategy(ArrayStrategy.REPLACE)
+                .bundle();
+        ObjectMapper objectMapper = Jackson.newObjectMapper();
+        Bootstrap<StackAppConfiguration> bootstrap = mount(bundle, new MockedConfigurationSourceProvider(objectMapper)
+                .content(JSON.suffixed(StackAppConfiguration.class.getSimpleName()),
+                        new StackAppConfiguration() {{
+                            strings = new String[]{"should", "be", "replaced"};
+                        }})
+                .content(JSON.suffixed(StackAppConfiguration.class.getSimpleName() + "-debug"),
+                        new StackAppConfiguration() {{
+                            strings = new String[]{"winning!"};
+                        }}));
+        InputStream debug = stackingProvider(bootstrap).open("debug");
+        StackAppConfiguration config =
+                objectMapper.readerFor(StackAppConfiguration.class).readValue(debug);
+        assertThat(config.strings.length, is(1));
+        assertThat(config.strings[0], is("winning!"));
+    }
+
+    @Test
     public void testQuiet() {
         ConfigStackBundle bundle = base().quiet().bundle();
+        assertNoProgress(bundle);
+    }
+
+    @Test
+    public void testProgressLoggerAsConsumer() {
+        Consumer<Supplier<String>> progressLogger = s -> {
+        };
+        ConfigStackBundle bundle = base().quiet().setProgressLogger(progressLogger).bundle();
+        assertNoProgress(bundle);
+    }
+
+    @Test
+    public void testProgressLogger() {
+        ConfigStackBundle bundle = base().quiet().setProgressLogger(s -> {
+        }).bundle();
+        assertNoProgress(bundle);
+    }
+
+    private void assertNoProgress(ConfigStackBundle bundle) {
         Bootstrap<StackAppConfiguration> bootstrap = mount(bundle, null);
         StackingConfigurationSourceProvider provider = stackingProvider(bootstrap);
         InputStream open = provider.open("foo");

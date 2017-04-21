@@ -1,5 +1,7 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
+import io.dropwizard.Configuration;
+
 import java.util.Arrays;
 import java.util.stream.Stream;
 
@@ -9,6 +11,10 @@ enum Suffix {
 
     boolean isSuffixed(String path) {
         return path != null && path.toLowerCase().endsWith("." + name().toLowerCase());
+    }
+
+    String suffixed(Class<? extends Configuration> type) {
+        return suffixed(type.getSimpleName());
     }
 
     String suffixed(String path) {
