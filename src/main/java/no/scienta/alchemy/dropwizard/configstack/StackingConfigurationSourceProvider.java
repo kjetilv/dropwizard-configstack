@@ -46,9 +46,9 @@ final class StackingConfigurationSourceProvider implements ConfigurationSourcePr
      */
     @Override
     public InputStream open(String serverCommand) {
-        JsonNode completed = load(serverCommand);
-        logResult(completed);
-        return stream(completed);
+        JsonNode config = load(serverCommand);
+        logResult(config);
+        return stream(config);
     }
 
     private JsonNode load(String serverCommand) {
