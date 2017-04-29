@@ -110,7 +110,7 @@ public class DefaultConfigurationLoaderTest {
                 "foo.json",
                 "bar.json"
         );
-        assertThat(resolver.load("foo,misc,prod"), are(
+        assertThat(resolver.load("foo", "misc", "prod"), are(
                 "logging.yaml",
                 "serverlogging.json",
                 base(JSON),
@@ -133,7 +133,7 @@ public class DefaultConfigurationLoaderTest {
                 "foo.json",
                 "bar.json"
         );
-        assertThat(resolver.load("foo,prod,bar,prod-cloud"), are(
+        assertThat(resolver.load("foo", "prod", "bar", "prod-cloud"), are(
                 "logging.yaml",
                 "serverlogging.json",
                 base(JSON),
@@ -156,7 +156,7 @@ public class DefaultConfigurationLoaderTest {
                 "foo.json",
                 "bar.json"
         );
-        assertThat(resolver.load("foo.json,prod,misc.json,notfound.yaml,bar.json"), are(
+        assertThat(resolver.load("foo.json", "prod", "misc.json", "notfound.yaml", "bar.json"), are(
                 "logging.yaml",
                 "serverlogging.json",
                 base(JSON),

@@ -10,8 +10,12 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "unused"})
 public final class ConfigStackBundler<C extends Configuration> {
+
+    public static <C extends Configuration> ConfigStackBundle defaultBundle(Class<C> configurationClass) {
+        return defaults(configurationClass).bundle();
+    }
 
     public static <C extends Configuration> ConfigStackBundler<C> defaults(Class<C> configurationClass) {
         return create(configurationClass)
@@ -25,7 +29,9 @@ public final class ConfigStackBundler<C extends Configuration> {
 
     private final Class<C> configurationClass;
 
-    private ConfigurationResourceResolver configurationResolver;
+    private ConfigurationStacker configurationStacker;
+
+    private ConfigurationResourceResolver configurationResourceResolver;
 
     private ConfigurationLoader configurationLoader;
 
@@ -52,11 +58,11 @@ public final class ConfigStackBundler<C extends Configuration> {
     /**
      * Set an alternative resolver
      *
-     * @param configurationResolver Resolver
+     * @param configurationResourceResolver Resolver
      * @return this bundler
      */
-    public ConfigStackBundler<C> setConfigurationResolver(ConfigurationResourceResolver configurationResolver) {
-        this.configurationResolver = Objects.requireNonNull(configurationResolver, "configurationResolver");
+    public ConfigStackBundler<C> setConfigurationResourceResolver(ConfigurationResourceResolver configurationResourceResolver) {
+        this.configurationResourceResolver = Objects.requireNonNull(configurationResourceResolver, "configurationResolver");
         return this;
     }
 
@@ -188,20 +194,19 @@ public final class ConfigStackBundler<C extends Configuration> {
     }
 
     public ConfigStackBundle bundle() {
-        ConfigurationResourceResolver resolver = this.configurationResolver == null
-                ? new BasenameVariationsResourceResolver(configurationClass)
-                : this.configurationResolver;
         progressLogger.println(() -> "Creating bundle for config " + configurationClass + "\n" +
                 (common.isEmpty() ? "" : "  common: " + String.join(", ", common) + "\n") +
                 ("  fall back to classpath: " + classpathResources + "\n") +
                 ("  variable substitutions: " + variableSubstitutions + "\n"));
         return new ConfigStackBundle(
-                resolver,
+                configurationClass,
+                configurationResourceResolver,
                 common,
                 progressLogger,
                 arrayStrategy,
                 classpathResources,
                 variableSubstitutions,
+                configurationStacker,
                 configurationLoader,
                 configurationBuilder,
                 configurationSubstitutor,

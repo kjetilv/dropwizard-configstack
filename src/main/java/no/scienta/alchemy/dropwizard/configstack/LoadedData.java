@@ -32,7 +32,7 @@ public final class LoadedData {
     /**
      * Loads and caches data from the stream, to be retrieved from {@link #getStream()} later.
      *
-     * @param path The path
+     * @param path   The path
      * @param stream The stream, ready for reading
      */
     private LoadedData(String path, InputStream stream) {

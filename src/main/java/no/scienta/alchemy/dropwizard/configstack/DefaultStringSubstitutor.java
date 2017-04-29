@@ -1,4 +1,3 @@
-
 package no.scienta.alchemy.dropwizard.configstack;
 
 import com.fasterxml.jackson.core.JsonPointer;

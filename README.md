@@ -2,22 +2,26 @@
 
 [![Build Status](https://travis-ci.org/kjetilv/dropwizard-configstack.svg?branch=master)](https://travis-ci.org/kjetilv/dropwizard-configstack)
 
-This is the open-source version of some code I wrote to make
-configuration with Dropwizard more manageable. What I missed the most
-was, in no particular order:
+This is the some code I wrote to make configuring Dropwizard easier.
+I like to express operational parameters as configuration if I can, but
+they often pile up, so it becomes a strain to maintain separate configs
+for different environments.  What I wanted was to maintain the defaults
+in one place, and _stack_ (mix-in if you like) overrides on top, to tune
+for test, staging, production etc.
 
-* A base, shared config with overrides and/or mix-ins for various
-  purposes and environments - stackable configs!
-* Variable substitutions like `${this}`, which can reference other
-  parts of the config as well, like
-  `${/server/applicationConnectors/0/type}`.  Give me one reason we
-  shouldn't have that.
+I also wanted a few more points:
+
+* Variable substitutions like `${this}` with lookups in system
+  properties and environment variables. It should also be able to
+  reference other parts of the config, like
+  `${/server/applicationConnectors/0/type}`, ie. JSON pointer syntax.
 * Resources that are loadable from files as usual, but with
-  fallbacks to classpath resources.
+  fallbacks to classpath resources. This way, defaults can be baked
+  into jars, and overrides can be put in the working directory.
 
-The stacking is the important part for me.  It needs to happen before
-it gets parsed, ie. dumb node-for-node building of a combined JSON AST,
-so we're cleanly decoupled from any parsing logic taking place later.
+The stacking needs to happen before the config gets parsed, ie. dumb
+node-for-node building of an aggregate JSON document, cleanly decoupled
+from the parsing logic taking place later.
 
 Dropwizard's config support already does much of this - except stacks -
 but not in ways that combine easily.
@@ -25,7 +29,9 @@ but not in ways that combine easily.
 Is this an opinionated bundle? Well, yes, it might have opinions on
 how to organize your config. But not that many, I would argue, and I
 don't think it holds any extreme views. Hopefully, most people should
-be able to reason with it.
+be able to reason with it and find that it adds convenience to their
+existing workflow. If it does take something away from your workflow,
+please give me a hint.
 
 ## Simple usage
 
@@ -45,42 +51,49 @@ A simpler method with these switches as defaults:
 
 ```java
 bootstrap.addBundle
-    (ConfigStackBundler.defaults(MyConfiguration.class)
-        .bundle());
+    (ConfigStackBundler.defaults(MyConfiguration.class).bundle());
+```
+
+Or if you're really lazy:
+
+```java
+bootstrap.addBundle
+    (ConfigStackBundler.defaultBundle(MyConfiguration.class));
 ```
 
 ### Resolution
 
-This is a default configuration that figures out what you want to load
-by looking the arguments to the wizard's `server` command, e.g. suppose
-you say :
+The default configuration figures out what you want to load
+by looking at the arguments to the wizard's `server` command. Suppose
+you say:
 
 ```
 server misc,debug
 ```
 
-This will load the following resources from classpath or the file
-system, assuming they exist, and stack them:
+This will look for the the following resources in the classpath or the
+working directory, and load what it finds:
 
 ```
 MyConfiguration.json
+MyConfiguration.yaml
 MyConfiguration-misc.json
+MyConfiguration-misc.yaml
 MyConfiguration-debug.json
+MyConfiguration-debug.yaml
+```
+
+Of course, you will only have a few of these lying around, like:
+
+```
+MyConfiguration.json
+MyConfiguration-debug.yaml
 ```
 
 The stack is popped and applied, so "later" stack elements (further
-down) override earlier ones (further up). In this case, the misc
-config overrides the base config and the debug config has the last
-say.
-
-YAML resources are checked too, so if, say, the following resources
-exist, they will be found and loaded:
-
-```
-MyConfiguration.json
-MyConfiguration-misc.yaml
-MyConfiguration-debug.yaml
-```
+down the list) override earlier ones (further up the list). In this
+case, the misc config overrides the base config and the debug config
+has the last say.
 
 Finally, if the paths *do* exist as file names, they *will* be loaded in
 preference to whatever is on the classpath. This is the default behavior
@@ -104,16 +117,27 @@ variables, which in turn take effect over the config.
 
 ### What's going on with my config?!
 
-Sometimes the world is not exactly what you expected.  Sometimes, you
-even notice the difference.  Sometimes, you need to find out what the
-world actually *is* like!  To help out, we log progress about what's
-going on – notably, the resources found, their URI's (and a byte count),
-as well as the resulting JSON itself.  By default, all this ends up on
-standard out. After all, logging isn't configured yet!
+With more going on, the world will sometimes be not exactly what you
+expected.  Sometimes, you will even notice the difference!  Sometimes,
+you need to find out what the world actually *is* like!
+
+To help out, we log progress about what's going on – notably, the
+resources found, their URI's (and a byte count),
+as well as the resulting JSON itself.
+
+However, by default, all this ends up on standard out. After all,
+logging isn't configured yet!
 
 Of course, this behavior can be changed, as further reading will reveal.
 
 ## Advanced usage
+
+The bundler machinery allows overrides for the following cogs:
+
+ * ```ConfigurationResourceResolver``` resolves how strings like
+   ```misc```, ```debug``` etc. are mapped to configuration resources.
+   It also provides the base name,
+ * ```
 
 ### Common base config
 
@@ -130,7 +154,7 @@ bootstrap.addBundle(
         .bundle());
 ```
 
-Now our simple example will include:
+Now our simple example will also find:
 
 ```
 common-config.yaml

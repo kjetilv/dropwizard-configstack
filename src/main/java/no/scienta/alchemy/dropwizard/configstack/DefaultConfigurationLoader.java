@@ -40,8 +40,7 @@ final class DefaultConfigurationLoader implements ConfigurationLoader {
     }
 
     @Override
-    public Collection<LoadedData> load(String serverCommand) {
-        Collection<String> stack = inputStack(serverCommand);
+    public Collection<LoadedData> load(Collection<String> stack) {
         Collection<String> candidatePaths = candidatePaths(stack);
         Collection<LoadedData> loadables = candidatePaths.stream()
                 .flatMap(this::loaded)

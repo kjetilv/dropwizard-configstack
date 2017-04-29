@@ -15,25 +15,31 @@ final class StackingConfigurationSourceProvider implements ConfigurationSourcePr
 
     private final ObjectMapper objectMapper;
 
+    private final ConfigurationStacker configurationStacker;
+
+    private final ConfigurationLoader configurationLoader;
+
     private final ConfigurationBuilder configurationBuilder;
 
     private final ConfigurationSubstitutor configurationSubstitutor;
 
-    private final ConfigurationLoader configurationLoader;
-
     private final ProgressLogger progressLogger;
 
-    StackingConfigurationSourceProvider(ConfigurationLoader configurationLoader,
+    StackingConfigurationSourceProvider(ConfigurationStacker configurationStacker,
+                                        ConfigurationResourceResolver configurationResourceResolver,
+                                        ConfigurationLoader configurationLoader,
                                         ConfigurationBuilder configurationBuilder,
                                         ConfigurationSubstitutor configurationSubstitutor,
                                         ObjectMapper objectMapper,
                                         ProgressLogger progressLogger) {
+        this.configurationStacker =
+                Objects.requireNonNull(configurationStacker, "configurationStacker");
+        this.configurationLoader =
+                Objects.requireNonNull(configurationLoader, "loadablesResolver");
         this.configurationBuilder =
                 Objects.requireNonNull(configurationBuilder, "configurationResolver");
         this.configurationSubstitutor =
                 Objects.requireNonNull(configurationSubstitutor, "configurationSubstitutor");
-        this.configurationLoader =
-                Objects.requireNonNull(configurationLoader, "loadablesResolver");
         this.objectMapper =
                 Objects.requireNonNull(objectMapper, "objectMapper");
         this.progressLogger =
@@ -53,11 +59,12 @@ final class StackingConfigurationSourceProvider implements ConfigurationSourcePr
 
     private JsonNode load(String serverCommand) {
         try {
-            Collection<LoadedData> loadedData = configurationLoader.load(serverCommand);
+            Collection<String> stackElements = configurationStacker.parse(serverCommand);
+            Collection<LoadedData> loadedData = configurationLoader.load(stackElements);
             JsonNode combinedConfiguration = configurationBuilder.build(loadedData);
             return configurationSubstitutor.substitute(combinedConfiguration);
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to load server command '" + serverCommand + "'", e);
+            throw new IllegalStateException("Failed to load config from argument <" + serverCommand + ">", e);
         }
     }
 

@@ -18,8 +18,8 @@ final class DefaultConfigurationBuilder implements ConfigurationBuilder {
     private final ArrayStrategy arrayStrategy;
 
     /**
-     * @param objectMapper   Object mapper
-     * @param arrayStrategy  How to combine config arrays, may be null
+     * @param objectMapper  Object mapper
+     * @param arrayStrategy How to combine config arrays, may be null
      */
     DefaultConfigurationBuilder(ObjectMapper objectMapper, ArrayStrategy arrayStrategy) {
         this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper");

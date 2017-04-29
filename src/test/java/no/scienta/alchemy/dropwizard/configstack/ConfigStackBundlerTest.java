@@ -17,6 +17,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -54,7 +55,7 @@ public class ConfigStackBundlerTest {
                 Stream.of("debug.json"));
 
         ConfigStackBundle bundle = base()
-                .setConfigurationResolver(resolver)
+                .setConfigurationResourceResolver(resolver)
                 .bundle();
         Bootstrap<StackAppConfiguration> bootstrap =
                 mount(bundle,
@@ -89,6 +90,7 @@ public class ConfigStackBundlerTest {
         assertFalse(progress.isEmpty());
     }
 
+    @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
     @Test
     public void testSetCustomLoader() {
         ConfigurationLoader loader = mock(ConfigurationLoader.class);
@@ -102,7 +104,7 @@ public class ConfigStackBundlerTest {
         StackingConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
         InputStream open = provider.open("foo");
         assertNotNull(open);
-        verify(loader, atLeastOnce()).load(eq("foo"));
+        verify(loader, atLeastOnce()).load(Arrays.asList("foo"));
         assertFalse(progress.isEmpty());
     }
 

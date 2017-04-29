@@ -12,7 +12,6 @@ public interface ConfigurationResourceResolver {
 
     /**
      * @return Resource(s) for base config.
-     *
      */
     Stream<String> baseResource();
 
