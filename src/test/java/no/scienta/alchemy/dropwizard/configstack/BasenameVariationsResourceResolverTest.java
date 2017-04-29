@@ -1,6 +1,6 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
-import no.scienta.alchemy.dropwizard.configstack.testapp.StackAppConfiguration;
+import no.scienta.alchemy.dropwizard.configstack.app.StackAppConfiguration;
 import org.junit.Test;
 
 import java.util.List;

@@ -13,6 +13,7 @@ import java.util.Objects;
 final class ConfigStackBundle implements Bundle {
 
     private final Class<?> configurationClass;
+
     private final ConfigurationResourceResolver configurationResourceResolver;
 
     private final List<String> commonConfigs;

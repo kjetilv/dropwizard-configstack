@@ -1,10 +1,12 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.junit.Test;
 
-import static no.scienta.alchemy.dropwizard.configstack.JsonStuff.read;
+import java.io.IOException;
+
 import static org.junit.Assert.*;
 
 public class JsonCombinerTest {
@@ -24,7 +26,7 @@ public class JsonCombinerTest {
     }
 
     @Test
-    public void nullOverride() {
+    public void nullOverride() throws IOException {
         JsonNode jn1 = read("{ \"foo\": \"bar\"}");
         JsonNode jn2 = read("{}");
         JsonNode jnc = JsonCombiner.combine(jn1, jn2);
@@ -49,7 +51,7 @@ public class JsonCombinerTest {
     }
 
     @Test
-    public void addStructure() {
+    public void addStructure() throws IOException {
         JsonNode jn1 = read("{ \"bar\": 1 }");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": \"zip\"}}");
         JsonNode jnc = JsonCombiner.combine(jn1, jn2);
@@ -65,7 +67,7 @@ public class JsonCombinerTest {
     }
 
     @Test
-    public void addStructureField() {
+    public void addStructureField() throws IOException {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": \"bar\"}}");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": \"zip\", \"foo\": 1}}");
         JsonNode jnc = JsonCombiner.combine(jn1, jn2);
@@ -82,7 +84,7 @@ public class JsonCombinerTest {
     }
 
     @Test
-    public void overlayArray() {
+    public void overlayArray() throws IOException {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": [\"zip\"]}}");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": [\"zip\", \"zot\"]}}");
         JsonNode jnc = JsonCombiner.combine(jn1, jn2);
@@ -97,7 +99,7 @@ public class JsonCombinerTest {
     }
 
     @Test
-    public void appendArray() {
+    public void appendArray() throws IOException {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": [\"zip\"]}}");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": [\"zip\", \"zot\"]}}");
         JsonNode jnc = JsonCombiner.combine(jn1, jn2, ArrayStrategy.APPEND);
@@ -113,7 +115,7 @@ public class JsonCombinerTest {
     }
 
     @Test
-    public void prependArray() {
+    public void prependArray() throws IOException {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": [\"zip\"]}}");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": [\"zip\", \"zot\"]}}");
         JsonNode jnc = JsonCombiner.combine(jn1, jn2, ArrayStrategy.PREPEND);
@@ -129,7 +131,7 @@ public class JsonCombinerTest {
     }
 
     @Test
-    public void combineArray() {
+    public void combineArray() throws IOException {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": [{\"foo\":\"zip\"}, {\"zip\":\"zot\"}]}}");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": [{\"foo\":\"zot\", \"bar\": \"zot\"}]}}");
         JsonNode jnc = JsonCombiner.combine(jn1, jn2);
@@ -146,5 +148,9 @@ public class JsonCombinerTest {
         assertEquals("zot", a1.get(0).get("bar").asText());
 
         assertEquals("zot", a1.get(1).get("zip").asText());
+    }
+
+    private static JsonNode read(String string) throws IOException {
+        return new ObjectMapper().readTree(string);
     }
 }

@@ -1,6 +1,7 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -37,7 +38,8 @@ final class DefaultConfigurationBuilder implements ConfigurationBuilder {
         if (loadedData.hasContent()) {
             try {
                 JsonFactory factory = factory(objectMapper, loadedData);
-                JsonNode jsonNode = factory.createParser(loadedData.getStream()).readValueAsTree();
+                JsonParser parser = factory.createParser(loadedData.getStream());
+                JsonNode jsonNode = parser.readValueAsTree();
                 return Stream.of(jsonNode);
             } catch (Exception e) {
                 throw new IllegalStateException(this + " failed to parse " + loadedData, e);

@@ -1,9 +1,11 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
-import static no.scienta.alchemy.dropwizard.configstack.JsonStuff.read;
+import java.io.IOException;
+
 import static org.junit.Assert.*;
 
 public class JsonSubstitutorTest {
@@ -32,7 +34,7 @@ public class JsonSubstitutorTest {
     }
 
     @Test
-    public void substituteArray() {
+    public void substituteArray() throws IOException {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": [\"zip\", \"foo\"]}}");
         JsonNode jnc = JsonSubstitutor.substitute(jn1, value -> value + value);
 
@@ -44,5 +46,9 @@ public class JsonSubstitutorTest {
         assertEquals(2, jnc.get("foo").get("fooNested").size());
         assertEquals("zipzip", jnc.get("foo").get("fooNested").get(0).asText());
         assertEquals("foofoo", jnc.get("foo").get("fooNested").get(1).asText());
+    }
+
+    private static JsonNode read(String string) throws IOException {
+        return new ObjectMapper().readTree(string);
     }
 }

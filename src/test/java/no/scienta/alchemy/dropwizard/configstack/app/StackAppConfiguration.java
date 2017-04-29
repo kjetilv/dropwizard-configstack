@@ -1,4 +1,4 @@
-package no.scienta.alchemy.dropwizard.configstack.testapp;
+package no.scienta.alchemy.dropwizard.configstack.app;
 
 import java.net.URI;
 

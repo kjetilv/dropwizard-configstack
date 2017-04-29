@@ -6,8 +6,8 @@ import io.dropwizard.logging.AppenderFactory;
 import io.dropwizard.logging.DefaultLoggingFactory;
 import io.dropwizard.logging.FileAppenderFactory;
 import io.dropwizard.testing.junit.DropwizardAppRule;
-import no.scienta.alchemy.dropwizard.configstack.testapp.StackApp;
-import no.scienta.alchemy.dropwizard.configstack.testapp.StackAppConfiguration;
+import no.scienta.alchemy.dropwizard.configstack.app.StackApp;
+import no.scienta.alchemy.dropwizard.configstack.app.StackAppConfiguration;
 import org.junit.ClassRule;
 import org.junit.Test;
 

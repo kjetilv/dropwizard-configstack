@@ -1,14 +1,15 @@
-package no.scienta.alchemy.dropwizard.configstack;
+package no.scienta.alchemy.dropwizard.configstack.test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import io.dropwizard.Bundle;
 import io.dropwizard.configuration.ConfigurationSourceProvider;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.setup.Bootstrap;
-import no.scienta.alchemy.dropwizard.configstack.testapp.StackApp;
-import no.scienta.alchemy.dropwizard.configstack.testapp.StackAppConfiguration;
-import org.hamcrest.CoreMatchers;
+import no.scienta.alchemy.dropwizard.configstack.*;
+import no.scienta.alchemy.dropwizard.configstack.app.StackApp;
+import no.scienta.alchemy.dropwizard.configstack.app.StackAppConfiguration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,7 +27,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static no.scienta.alchemy.dropwizard.configstack.Suffix.JSON;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
@@ -47,14 +47,14 @@ public class ConfigStackBundlerTest {
     }
 
     @Test
-    public void testCustomConfigResolver() {
+    public void testCustomConfigResolver() throws IOException {
         ConfigurationResourceResolver resolver = mock(ConfigurationResourceResolver.class);
         when(resolver.baseResource()).thenReturn(
                 Stream.of("foo.json"));
         when(resolver.stackedResource(eq("debug.json"))).thenReturn(
                 Stream.of("debug.json"));
 
-        ConfigStackBundle bundle = base()
+        Bundle bundle = base()
                 .setConfigurationResourceResolver(resolver)
                 .bundle();
         Bootstrap<StackAppConfiguration> bootstrap =
@@ -62,7 +62,7 @@ public class ConfigStackBundlerTest {
                         new MockedConfigurationSourceProvider(
                                 "foo.json",
                                 "debug.json"));
-        StackingConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
+        ConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
         InputStream open = provider.open("debug.json");
         assertNotNull(open);
 
@@ -73,17 +73,17 @@ public class ConfigStackBundlerTest {
     }
 
     @Test
-    public void testSetCustomBuilder() {
+    public void testSetCustomBuilder() throws IOException {
         ConfigurationBuilder combiner = mock(ConfigurationBuilder.class);
         when(combiner.build(anyCollection())).thenReturn(JsonNodeFactory.instance.objectNode());
 
-        ConfigStackBundle bundle = base()
+        Bundle bundle = base()
                 .setConfigurationBuilder(combiner)
                 .bundle();
         Bootstrap<StackAppConfiguration> bootstrap =
                 mount(bundle,
                         new MockedConfigurationSourceProvider("foo.json"));
-        StackingConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
+        ConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
         InputStream open = provider.open("foo.json");
         assertNotNull(open);
         verify(combiner, atLeastOnce()).build(anyCollection());
@@ -92,16 +92,16 @@ public class ConfigStackBundlerTest {
 
     @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
     @Test
-    public void testSetCustomLoader() {
+    public void testSetCustomLoader() throws IOException {
         ConfigurationLoader loader = mock(ConfigurationLoader.class);
         when(loader.load(eq("foo"))).thenReturn
                 (Collections.singleton(LoadedData.create("/foo.json", new ByteArrayInputStream("{}".getBytes()))));
 
-        ConfigStackBundle bundle = base()
+        Bundle bundle = base()
                 .setConfigurationLoader(loader)
                 .bundle();
         Bootstrap<StackAppConfiguration> bootstrap = mount(bundle, null);
-        StackingConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
+        ConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
         InputStream open = provider.open("foo");
         assertNotNull(open);
         verify(loader, atLeastOnce()).load(Arrays.asList("foo"));
@@ -109,15 +109,15 @@ public class ConfigStackBundlerTest {
     }
 
     @Test
-    public void testSetCustomSubstitutor() {
+    public void testSetCustomSubstitutor() throws IOException {
         ConfigurationSubstitutor sub = mock(ConfigurationSubstitutor.class);
         when(sub.substitute(any(JsonNode.class))).thenReturn(JsonNodeFactory.instance.objectNode());
 
-        ConfigStackBundle bundle = base()
+        Bundle bundle = base()
                 .setConfigurationSubstitutor(sub)
                 .bundle();
         Bootstrap<StackAppConfiguration> bootstrap = mount(bundle, null);
-        StackingConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
+        ConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
         InputStream open = provider.open("foo");
         assertNotNull(open);
         verify(sub, atLeastOnce()).substitute(any(JsonNode.class));
@@ -125,16 +125,16 @@ public class ConfigStackBundlerTest {
     }
 
     @Test
-    public void testSetSubstitutor() {
+    public void testSetSubstitutor() throws IOException {
         AtomicBoolean called = new AtomicBoolean();
-        ConfigStackBundle bundle = base()
+        Bundle bundle = base()
                 .setSubstitutor((Function<String, String>) s -> {
                     called.compareAndSet(false, true);
                     return s + s;
                 })
                 .bundle();
         Bootstrap<StackAppConfiguration> bootstrap = mount(bundle, null);
-        StackingConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
+        ConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
         InputStream open = provider.open("foo");
         assertNotNull(open);
         assertTrue(called.get());
@@ -143,16 +143,16 @@ public class ConfigStackBundlerTest {
 
     @Test
     public void testArrayStrategy() throws IOException {
-        ConfigStackBundle bundle = base()
+        Bundle bundle = base()
                 .setArrayStrategy(ArrayStrategy.REPLACE)
                 .bundle();
         ObjectMapper objectMapper = Jackson.newObjectMapper();
         Bootstrap<StackAppConfiguration> bootstrap = mount(bundle, new MockedConfigurationSourceProvider(objectMapper)
-                .content(JSON.suffixed(StackAppConfiguration.class.getSimpleName()),
+                .content(StackAppConfiguration.class.getSimpleName() + ".json",
                         new StackAppConfiguration() {{
                             strings = new String[]{"should", "be", "replaced"};
                         }})
-                .content(JSON.suffixed(StackAppConfiguration.class.getSimpleName() + "-debug"),
+                .content(StackAppConfiguration.class.getSimpleName() + "-debug.json",
                         new StackAppConfiguration() {{
                             strings = new String[]{"winning!"};
                         }}));
@@ -164,29 +164,31 @@ public class ConfigStackBundlerTest {
     }
 
     @Test
-    public void testQuiet() {
-        ConfigStackBundle bundle = base().quiet().bundle();
+    public void testQuiet() throws IOException {
+        Bundle bundle = base().quiet().bundle();
         assertNoProgress(bundle);
     }
 
     @Test
-    public void testProgressLoggerAsConsumer() {
-        Consumer<Supplier<String>> progressLogger = s -> {
-        };
-        ConfigStackBundle bundle = base().quiet().setProgressLogger(progressLogger).bundle();
+    public void testProgressLoggerAsConsumer() throws IOException {
+        List<String> localLog = new ArrayList<>();
+        Consumer<Supplier<String>> progressLogger = s -> localLog.add(s.get());
+        Bundle bundle = base().quiet().setProgressLogger(progressLogger).bundle();
         assertNoProgress(bundle);
+        assertFalse(localLog.isEmpty());
     }
 
     @Test
-    public void testProgressLogger() {
-        ConfigStackBundle bundle = base().quiet().setProgressLogger(s -> {
-        }).bundle();
+    public void testProgressLogger() throws IOException {
+        List<Supplier<String>> localLog = new ArrayList<>();
+        Bundle bundle = base().quiet().setProgressLogger(localLog::add).bundle();
         assertNoProgress(bundle);
+        assertFalse(localLog.isEmpty());
     }
 
-    private void assertNoProgress(ConfigStackBundle bundle) {
+    private void assertNoProgress(Bundle bundle) throws IOException {
         Bootstrap<StackAppConfiguration> bootstrap = mount(bundle, null);
-        StackingConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
+        ConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
         InputStream open = provider.open("foo");
         assertNotNull(open);
         assertTrue(progress.isEmpty());
@@ -198,16 +200,15 @@ public class ConfigStackBundlerTest {
                 .setProgressLogger(string -> progress.add(string.get()));
     }
 
-    private StackingConfigurationSourceProvider assertedStackingProvider(Bootstrap<StackAppConfiguration> bootstrap) {
+    private ConfigurationSourceProvider assertedStackingProvider(Bootstrap<StackAppConfiguration> bootstrap) {
         ConfigurationSourceProvider provider =
                 bootstrap.getConfigurationSourceProvider();
-        assertThat(provider, CoreMatchers.instanceOf(StackingConfigurationSourceProvider.class));
-
-        return (StackingConfigurationSourceProvider) provider;
+        assertTrue(provider.getClass().getPackage().getName()
+                .startsWith("no.scienta.alchemy"));
+        return provider;
     }
 
-    private Bootstrap<StackAppConfiguration> mount(ConfigStackBundle bundle,
-                                                   ConfigurationSourceProvider provider) {
+    private Bootstrap<StackAppConfiguration> mount(Bundle bundle, ConfigurationSourceProvider provider) {
         StackApp stackApp = new StackApp();
         Bootstrap<StackAppConfiguration> bootstrap = new Bootstrap<>(stackApp);
         if (provider != null) {

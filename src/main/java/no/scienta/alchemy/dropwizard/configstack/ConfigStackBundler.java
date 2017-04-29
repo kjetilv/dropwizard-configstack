@@ -1,58 +1,47 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
+import io.dropwizard.Bundle;
 import io.dropwizard.Configuration;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-@SuppressWarnings({"WeakerAccess", "unused"})
-public final class ConfigStackBundler<C extends Configuration> {
+/**
+ * Bundles a {@link Bundle} that does configuration.
+ *
+ * @param <C> Configuration class
+ */
+@SuppressWarnings("unused")
+public interface ConfigStackBundler<C extends Configuration> {
 
-    public static <C extends Configuration> ConfigStackBundle defaultBundle(Class<C> configurationClass) {
+    /**
+     * @param configurationClass Configuration class
+     * @param <C> Configuration type
+     * @return A bundle with default settings
+     */
+    static <C extends Configuration> Bundle defaultBundle(Class<C> configurationClass) {
         return defaults(configurationClass).bundle();
     }
 
-    public static <C extends Configuration> ConfigStackBundler<C> defaults(Class<C> configurationClass) {
+    /**
+     * @param configurationClass Configuration class
+     * @param <C> Configuration type
+     * @return A bundler with default settings, for further bundling
+     */
+    static <C extends Configuration> ConfigStackBundler<C> defaults(Class<C> configurationClass) {
         return create(configurationClass)
                 .enableClasspathResources()
                 .enableVariableSubstitutions();
     }
 
-    public static <C extends Configuration> ConfigStackBundler<C> create(Class<C> configurationClass) {
-        return new ConfigStackBundler<>(configurationClass);
-    }
-
-    private final Class<C> configurationClass;
-
-    private ConfigurationStacker configurationStacker;
-
-    private ConfigurationResourceResolver configurationResourceResolver;
-
-    private ConfigurationLoader configurationLoader;
-
-    private ConfigurationBuilder configurationBuilder;
-
-    private ConfigurationSubstitutor configurationSubstitutor;
-
-    private final List<String> common = new ArrayList<>();
-
-    private StringSubstitutor substitutor;
-
-    private ArrayStrategy arrayStrategy = ArrayStrategy.OVERLAY;
-
-    private ProgressLogger progressLogger = DEFAULT_PROGRESS_LOGGER;
-
-    private boolean classpathResources;
-
-    private boolean variableSubstitutions;
-
-    private ConfigStackBundler(Class<C> configurationClass) {
-        this.configurationClass = Objects.requireNonNull(configurationClass, "configurationClass");
+    /**
+     * @param configurationClass Configuration class
+     * @param <C> Configuration type
+     * @return A basic bundler
+     */
+    static <C extends Configuration> ConfigStackBundler<C> create(Class<C> configurationClass) {
+        return new ConfigStackBundlerImpl<>(configurationClass);
     }
 
     /**
@@ -61,15 +50,14 @@ public final class ConfigStackBundler<C extends Configuration> {
      * @param configurationResourceResolver Resolver
      * @return this bundler
      */
-    public ConfigStackBundler<C> setConfigurationResourceResolver(ConfigurationResourceResolver configurationResourceResolver) {
-        this.configurationResourceResolver = Objects.requireNonNull(configurationResourceResolver, "configurationResolver");
-        return this;
-    }
+    ConfigStackBundler<C> setConfigurationResourceResolver(ConfigurationResourceResolver configurationResourceResolver);
 
-    public ConfigStackBundler<C> addCommonConfig(String... common) {
-        this.common.addAll(Arrays.asList(common));
-        return this;
-    }
+    /**
+     * Add base config to be loaded first.
+     * @param common Common configs
+     * @return this bundler
+     */
+    ConfigStackBundler<C> addCommonConfig(String... common);
 
     /**
      * Enable classpath resources loading.  Inserts a provider which delegates to the existing provider, then
@@ -77,20 +65,14 @@ public final class ConfigStackBundler<C extends Configuration> {
      *
      * @return this bundler
      */
-    public ConfigStackBundler<C> enableClasspathResources() {
-        this.classpathResources = true;
-        return this;
-    }
+    ConfigStackBundler<C> enableClasspathResources();
 
     /**
      * Turn variable substitutions on.  Turns on use of a {@link ConfigurationSubstitutor} on the end result JSON.
      *
      * @return this bundler
      */
-    public ConfigStackBundler<C> enableVariableSubstitutions() {
-        this.variableSubstitutions = true;
-        return this;
-    }
+    ConfigStackBundler<C> enableVariableSubstitutions();
 
     /**
      * Override procedure for {@link LoadedData loading data} based on a
@@ -99,10 +81,7 @@ public final class ConfigStackBundler<C extends Configuration> {
      * @param configurationLoader Override configuration loader
      * @return this bundler
      */
-    public ConfigStackBundler<C> setConfigurationLoader(ConfigurationLoader configurationLoader) {
-        this.configurationLoader = configurationLoader;
-        return this;
-    }
+    ConfigStackBundler<C> setConfigurationLoader(ConfigurationLoader configurationLoader);
 
     /**
      * Override the procedure for building a config from {@link LoadedData loaded data}.
@@ -110,10 +89,7 @@ public final class ConfigStackBundler<C extends Configuration> {
      * @param configurationBuilder Override configuration builder
      * @return this bundler
      */
-    public ConfigStackBundler<C> setConfigurationBuilder(ConfigurationBuilder configurationBuilder) {
-        this.configurationBuilder = configurationBuilder;
-        return this;
-    }
+    ConfigStackBundler<C> setConfigurationBuilder(ConfigurationBuilder configurationBuilder);
 
     /**
      * Override the procedure for performing substitutions on a loaded configuration
@@ -121,10 +97,7 @@ public final class ConfigStackBundler<C extends Configuration> {
      * @param configurationSubstitutor Overrider configuration substitutor
      * @return this bundler
      */
-    public ConfigStackBundler<C> setConfigurationSubstitutor(ConfigurationSubstitutor configurationSubstitutor) {
-        this.configurationSubstitutor = configurationSubstitutor;
-        return this;
-    }
+    ConfigStackBundler<C> setConfigurationSubstitutor(ConfigurationSubstitutor configurationSubstitutor);
 
     /**
      * Set a different string replacer, which will be used by the default {@link ConfigurationSubstitutor}.
@@ -132,9 +105,7 @@ public final class ConfigStackBundler<C extends Configuration> {
      * @param substitutor Override string replacer
      * @return this bundler
      */
-    public ConfigStackBundler<C> setSubstitutor(Function<String, String> substitutor) {
-        return setSubstitutor((StringSubstitutor) substitutor::apply);
-    }
+    ConfigStackBundler<C> setSubstitutor(Function<String, String> substitutor);
 
     /**
      * Set a different string replacer, which will be used by the default {@link ConfigurationSubstitutor}.
@@ -142,12 +113,7 @@ public final class ConfigStackBundler<C extends Configuration> {
      * @param substitutor Override replacer
      * @return this bundler
      */
-    public ConfigStackBundler<C> setSubstitutor(StringSubstitutor substitutor) {
-        Objects.requireNonNull(substitutor, "substitutor");
-        enableVariableSubstitutions();
-        this.substitutor = substitutor;
-        return this;
-    }
+    ConfigStackBundler<C> setSubstitutor(StringSubstitutor substitutor);
 
     /**
      * Set a different array strategy, to be used by the default {@link ConfigurationBuilder}.  If not set,
@@ -156,10 +122,7 @@ public final class ConfigStackBundler<C extends Configuration> {
      * @param arrayStrategy How to combine arrays
      * @return this bundler
      */
-    public ConfigStackBundler<C> setArrayStrategy(ArrayStrategy arrayStrategy) {
-        this.arrayStrategy = Objects.requireNonNull(arrayStrategy, "arrayStrategy");
-        return this;
-    }
+    ConfigStackBundler<C> setArrayStrategy(ArrayStrategy arrayStrategy);
 
     /**
      * Set a progress logger.
@@ -167,9 +130,7 @@ public final class ConfigStackBundler<C extends Configuration> {
      * @param progressLogger Progress logger
      * @return this bundler
      */
-    public ConfigStackBundler<C> setProgressLogger(Consumer<Supplier<String>> progressLogger) {
-        return setProgressLogger(progressLogger::accept);
-    }
+    ConfigStackBundler<C> setProgressLogger(Consumer<Supplier<String>> progressLogger);
 
     /**
      * How to log progress.
@@ -177,41 +138,19 @@ public final class ConfigStackBundler<C extends Configuration> {
      * @param progressLogger If null, quiet operation.
      * @return this bundler
      */
-    public ConfigStackBundler<C> setProgressLogger(ProgressLogger progressLogger) {
-        this.progressLogger = Objects.requireNonNull(progressLogger);
-        return this;
-    }
+    ConfigStackBundler<C> setProgressLogger(ProgressLogger progressLogger);
 
     /**
      * Don't log progress.
      *
      * @return this bundler
      */
-    public ConfigStackBundler<C> quiet() {
-        return setProgressLogger(s -> {
-            // ignore
-        });
+    default ConfigStackBundler<C> quiet() {
+        return setProgressLogger(s -> {});
     }
 
-    public ConfigStackBundle bundle() {
-        progressLogger.println(() -> "Creating bundle for config " + configurationClass + "\n" +
-                (common.isEmpty() ? "" : "  common: " + String.join(", ", common) + "\n") +
-                ("  fall back to classpath: " + classpathResources + "\n") +
-                ("  variable substitutions: " + variableSubstitutions + "\n"));
-        return new ConfigStackBundle(
-                configurationClass,
-                configurationResourceResolver,
-                common,
-                progressLogger,
-                arrayStrategy,
-                classpathResources,
-                variableSubstitutions,
-                configurationStacker,
-                configurationLoader,
-                configurationBuilder,
-                configurationSubstitutor,
-                substitutor);
-    }
-
-    static final ProgressLogger DEFAULT_PROGRESS_LOGGER = supplier -> System.out.println(supplier.get());
+    /**
+     * @return The bundle
+     */
+    Bundle bundle();
 }

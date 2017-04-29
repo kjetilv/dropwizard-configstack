@@ -1,9 +1,9 @@
-package no.scienta.alchemy.dropwizard.configstack;
+package no.scienta.alchemy.dropwizard.configstack.test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.configuration.ConfigurationSourceProvider;
-import no.scienta.alchemy.dropwizard.configstack.testapp.StackAppConfiguration;
+import no.scienta.alchemy.dropwizard.configstack.app.StackAppConfiguration;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -25,7 +25,7 @@ public class MockedConfigurationSourceProvider implements ConfigurationSourcePro
         this(null, paths);
     }
 
-    public MockedConfigurationSourceProvider(ObjectMapper objectMapper, String... paths) {
+    MockedConfigurationSourceProvider(ObjectMapper objectMapper, String... paths) {
         this.objectMapper = objectMapper;
         this.paths = paths;
     }

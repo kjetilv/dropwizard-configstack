@@ -1,7 +1,5 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
-import org.hamcrest.CoreMatchers;
-import org.junit.Assert;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.hasItems;

@@ -11,6 +11,7 @@ import java.util.function.Function;
 /**
  * A configuration resource that was found and loaded.
  */
+@SuppressWarnings("WeakerAccess")
 public final class LoadedData {
 
     private final String path;
@@ -21,11 +22,11 @@ public final class LoadedData {
      * @param path A path
      * @return A function that creates a loadable from the stream found at the path
      */
-    static Function<InputStream, LoadedData> forPath(String path) {
+    public static Function<InputStream, LoadedData> forPath(String path) {
         return stream -> create(path, stream);
     }
 
-    static LoadedData create(String path, InputStream stream) {
+    public static LoadedData create(String path, InputStream stream) {
         return new LoadedData(path, stream);
     }
 
@@ -54,21 +55,21 @@ public final class LoadedData {
     /**
      * @return Original path
      */
-    String getPath() {
+    public String getPath() {
         return path;
     }
 
     /**
      * @return True iff this is a {@link Suffix#YAML} resource
      */
-    boolean isYaml() {
+    public boolean isYaml() {
         return Suffix.YAML.isSuffixed(this.path);
     }
 
     /**
      * @return True iff content was found at the resource path
      */
-    boolean hasContent() {
+    public boolean hasContent() {
         return contents != null;
     }
 
