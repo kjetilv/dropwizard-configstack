@@ -16,8 +16,8 @@ public interface ConfigurationResourceResolver {
     Stream<String> baseResource();
 
     /**
-     * @param stack Stack element
+     * @param stackedElement Stack element
      * @return Resource(s) for a stackable resource that overrides the {@link #baseResource()}.
      */
-    Stream<String> stackedResource(String stack);
+    Stream<String> stackedResource(String stackedElement);
 }

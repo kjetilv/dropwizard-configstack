@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -74,8 +73,8 @@ public class ConfigStackBundlerTest {
 
     @Test
     public void testSetCustomBuilder() throws IOException {
-        ConfigurationBuilder combiner = mock(ConfigurationBuilder.class);
-        when(combiner.build(anyCollection())).thenReturn(JsonNodeFactory.instance.objectNode());
+        ConfigurationAssembler combiner = mock(ConfigurationAssembler.class);
+        when(combiner.assemble(anyCollection())).thenReturn(JsonNodeFactory.instance.objectNode());
 
         Bundle bundle = base()
                 .setConfigurationBuilder(combiner)
@@ -86,7 +85,7 @@ public class ConfigStackBundlerTest {
         ConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
         InputStream open = provider.open("foo.json");
         assertNotNull(open);
-        verify(combiner, atLeastOnce()).build(anyCollection());
+        verify(combiner, atLeastOnce()).assemble(anyCollection());
         assertFalse(progress.isEmpty());
     }
 
@@ -128,7 +127,7 @@ public class ConfigStackBundlerTest {
     public void testSetSubstitutor() throws IOException {
         AtomicBoolean called = new AtomicBoolean();
         Bundle bundle = base()
-                .setSubstitutor((Function<String, String>) s -> {
+                .setSubstitutor(s -> {
                     called.compareAndSet(false, true);
                     return s + s;
                 })

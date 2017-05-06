@@ -17,6 +17,10 @@ public class StackApp extends Application<StackAppConfiguration> {
 
     private static final Logger log = LoggerFactory.getLogger(StackApp.class);
 
+    public static void main(String[] args) throws Exception {
+        new StackApp().run(args);
+    }
+
     @Override
     public void initialize(Bootstrap<StackAppConfiguration> bootstrap) {
         bootstrap.getObjectMapper()

@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 final class ConfigStackBundlerImpl<C extends Configuration> implements ConfigStackBundler<C> {
@@ -21,7 +20,7 @@ final class ConfigStackBundlerImpl<C extends Configuration> implements ConfigSta
 
     private ConfigurationLoader configurationLoader;
 
-    private ConfigurationBuilder configurationBuilder;
+    private ConfigurationAssembler configurationBuilder;
 
     private ConfigurationSubstitutor configurationSubstitutor;
 
@@ -72,7 +71,7 @@ final class ConfigStackBundlerImpl<C extends Configuration> implements ConfigSta
     }
 
     @Override
-    public ConfigStackBundler<C> setConfigurationBuilder(ConfigurationBuilder configurationBuilder) {
+    public ConfigStackBundler<C> setConfigurationBuilder(ConfigurationAssembler configurationBuilder) {
         this.configurationBuilder = configurationBuilder;
         return this;
     }
@@ -81,11 +80,6 @@ final class ConfigStackBundlerImpl<C extends Configuration> implements ConfigSta
     public ConfigStackBundler<C> setConfigurationSubstitutor(ConfigurationSubstitutor configurationSubstitutor) {
         this.configurationSubstitutor = configurationSubstitutor;
         return this;
-    }
-
-    @Override
-    public ConfigStackBundler<C> setSubstitutor(Function<String, String> substitutor) {
-        return setSubstitutor((StringSubstitutor) substitutor::apply);
     }
 
     @Override

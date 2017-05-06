@@ -30,7 +30,7 @@ final class ConfigStackBundle implements Bundle {
 
     private final ConfigurationLoader configurationLoader;
 
-    private final ConfigurationBuilder configurationBuilder;
+    private final ConfigurationAssembler configurationBuilder;
 
     private final ConfigurationSubstitutor configurationSubstitutor;
 
@@ -45,7 +45,7 @@ final class ConfigStackBundle implements Bundle {
                       boolean variableSubstitutions,
                       ConfigurationStacker configurationStacker,
                       ConfigurationLoader configurationLoader,
-                      ConfigurationBuilder configurationBuilder,
+                      ConfigurationAssembler configurationBuilder,
                       ConfigurationSubstitutor configurationSubstitutor,
                       StringSubstitutor substitutor) {
         this.configurationClass = Objects.requireNonNull(configurationClass, "configurationClass");
@@ -74,16 +74,22 @@ final class ConfigStackBundle implements Bundle {
                 configurationResourceResolver,
                 delegateConfigurationSourceProvider(bootstrap));
 
-        bootstrap.setConfigurationSourceProvider
-                (new StackingConfigurationSourceProvider(
-                        getConfigurationStacker(),
-                        configurationResourceResolver,
-                        configurationLoader,
-                        getConfigurationBuilder(bootstrap),
-                        getConfigurationSubstitutor(),
-                        bootstrap.getObjectMapper(),
-                        progressLogger
-                ));
+        StackingConfigurationSourceProvider provider = new StackingConfigurationSourceProvider(
+                getConfigurationStacker(),
+                configurationResourceResolver,
+                configurationLoader,
+                getConfigurationBuilder(bootstrap),
+                getConfigurationSubstitutor(),
+                bootstrap.getObjectMapper(),
+                progressLogger
+        );
+        bootstrap.setConfigurationFactoryFactory(
+                (type, validator, objectMapper, propertyPrefix) ->
+                        new EmptyInputYamlConfigurationFactory<>(
+                                type, validator, objectMapper, propertyPrefix, configurationResourceResolver, provider
+                        )
+        );
+        bootstrap.setConfigurationSourceProvider(provider);
     }
 
     private void failOnMisconfiguration(Bootstrap<?> bootstrap) {
@@ -123,9 +129,9 @@ final class ConfigStackBundle implements Bundle {
         return node -> node;
     }
 
-    private ConfigurationBuilder getConfigurationBuilder(Bootstrap<?> bootstrap) {
+    private ConfigurationAssembler getConfigurationBuilder(Bootstrap<?> bootstrap) {
         return configurationBuilder != null ? configurationBuilder
-                : new DefaultConfigurationBuilder(bootstrap.getObjectMapper(), arrayStrategy);
+                : new DefaultConfigurationAssembler(bootstrap.getObjectMapper(), arrayStrategy);
     }
 
     private ConfigurationLoader getConfigurationLoader(ConfigurationResourceResolver configurationResourceResolver,
@@ -143,4 +149,5 @@ final class ConfigStackBundle implements Bundle {
     @Override
     public void run(Environment environment) {
     }
+
 }

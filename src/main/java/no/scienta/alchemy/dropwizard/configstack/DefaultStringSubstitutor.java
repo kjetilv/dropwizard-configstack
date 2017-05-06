@@ -8,8 +8,11 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Function;
 
-final class DefaultStringSubstitutor implements StringSubstitutor {
+import static org.apache.commons.lang3.text.StrMatcher.stringMatcher;
+
+final class DefaultStringSubstitutor implements StringSubstitutor, Function<String, String> {
 
     private final Properties properties;
 
@@ -24,16 +27,22 @@ final class DefaultStringSubstitutor implements StringSubstitutor {
     }
 
     @Override
-    public String substitute(String value) {
+    public String apply(String value) {
+        StrSubstitutor strSubstitutor =
+                new StrSubstitutor(new Lookup(node), stringMatcher("${"), stringMatcher("}"),'\'');
         String workString = value;
         while (true) {
-            StrSubstitutor strSubstitutor = new StrSubstitutor(new Lookup(node), "${", "}", '\'');
             String replaced = strSubstitutor.replace(workString);
             if (replaced.equals(workString)) {
                 return workString;
             }
             workString = replaced;
         }
+    }
+
+    @Override
+    public String substitute(String value) {
+        return apply(value);
     }
 
     private final class Lookup extends StrLookup<String> {

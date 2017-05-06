@@ -12,7 +12,7 @@ final class DefaultConfigurationSubstitutor implements ConfigurationSubstitutor 
 
     @Override
     public JsonNode substitute(JsonNode combined) {
-        return JsonSubstitutor.substitute(combined, stringSubstitutor(combined));
+        return Json.substitute(combined, stringSubstitutor(combined)::substitute);
     }
 
     private StringSubstitutor stringSubstitutor(JsonNode combined) {
@@ -23,6 +23,6 @@ final class DefaultConfigurationSubstitutor implements ConfigurationSubstitutor 
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "[" + "]";
+        return getClass().getSimpleName() + "[" + substitutor + "]";
     }
 }

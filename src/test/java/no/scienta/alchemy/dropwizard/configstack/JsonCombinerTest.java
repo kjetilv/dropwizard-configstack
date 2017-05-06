@@ -15,7 +15,7 @@ public class JsonCombinerTest {
     public void combineSimple() throws Exception {
         JsonNode jn1 = read("{ \"foo\": \"bar\"}");
         JsonNode jn2 = read("{ \"zot\": \"zip\"}");
-        JsonNode jnc = JsonCombiner.combine(jn1, jn2);
+        JsonNode jnc = combine(jn1, jn2);
 
         assertNotNull(jnc);
         assertEquals(2, jnc.size());
@@ -25,11 +25,19 @@ public class JsonCombinerTest {
         assertEquals("zip", jnc.get("zot").asText());
     }
 
+    private JsonNode combine(JsonNode jn1, JsonNode jn2) {
+        return combine(null, jn1, jn2);
+    }
+
+    private JsonNode combine(ArrayStrategy arrayStrategy, JsonNode jn1, JsonNode jn2) {
+        return Json.combiner(arrayStrategy).apply(jn1, jn2);
+    }
+
     @Test
     public void nullOverride() throws IOException {
         JsonNode jn1 = read("{ \"foo\": \"bar\"}");
         JsonNode jn2 = read("{}");
-        JsonNode jnc = JsonCombiner.combine(jn1, jn2);
+        JsonNode jnc = combine(jn1, jn2);
 
         assertNotNull(jnc);
         assertEquals(1, jnc.size());
@@ -41,7 +49,7 @@ public class JsonCombinerTest {
     public void combineStructure() throws Exception {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": \"bar\"}}");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": \"zip\"}}");
-        JsonNode jnc = JsonCombiner.combine(jn1, jn2);
+        JsonNode jnc = combine(jn1, jn2);
 
         assertNotNull(jnc);
         assertEquals(1, jnc.size());
@@ -54,7 +62,7 @@ public class JsonCombinerTest {
     public void addStructure() throws IOException {
         JsonNode jn1 = read("{ \"bar\": 1 }");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": \"zip\"}}");
-        JsonNode jnc = JsonCombiner.combine(jn1, jn2);
+        JsonNode jnc = combine(jn1, jn2);
 
         assertNotNull(jnc);
         assertEquals(2, jnc.size());
@@ -70,7 +78,7 @@ public class JsonCombinerTest {
     public void addStructureField() throws IOException {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": \"bar\"}}");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": \"zip\", \"foo\": 1}}");
-        JsonNode jnc = JsonCombiner.combine(jn1, jn2);
+        JsonNode jnc = combine(jn1, jn2);
 
         assertNotNull(jnc);
         assertEquals(1, jnc.size());
@@ -87,7 +95,7 @@ public class JsonCombinerTest {
     public void overlayArray() throws IOException {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": [\"zip\"]}}");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": [\"zip\", \"zot\"]}}");
-        JsonNode jnc = JsonCombiner.combine(jn1, jn2);
+        JsonNode jnc = combine(jn1, jn2);
 
         assertEquals(1, jnc.size());
         assertTrue(jnc.has("foo"));
@@ -102,7 +110,7 @@ public class JsonCombinerTest {
     public void appendArray() throws IOException {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": [\"zip\"]}}");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": [\"zip\", \"zot\"]}}");
-        JsonNode jnc = JsonCombiner.combine(jn1, jn2, ArrayStrategy.APPEND);
+        JsonNode jnc = combine(ArrayStrategy.APPEND, jn1, jn2);
 
         assertEquals(1, jnc.size());
         assertTrue(jnc.has("foo"));
@@ -118,7 +126,7 @@ public class JsonCombinerTest {
     public void prependArray() throws IOException {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": [\"zip\"]}}");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": [\"zip\", \"zot\"]}}");
-        JsonNode jnc = JsonCombiner.combine(jn1, jn2, ArrayStrategy.PREPEND);
+        JsonNode jnc = combine(ArrayStrategy.PREPEND, jn1, jn2);
 
         assertEquals(1, jnc.size());
         assertTrue(jnc.has("foo"));
@@ -134,7 +142,7 @@ public class JsonCombinerTest {
     public void combineArray() throws IOException {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": [{\"foo\":\"zip\"}, {\"zip\":\"zot\"}]}}");
         JsonNode jn2 = read("{ \"foo\": { \"fooNested\": [{\"foo\":\"zot\", \"bar\": \"zot\"}]}}");
-        JsonNode jnc = JsonCombiner.combine(jn1, jn2);
+        JsonNode jnc = combine(jn1, jn2);
 
         assertEquals(1, jnc.size());
         assertTrue(jnc.has("foo"));

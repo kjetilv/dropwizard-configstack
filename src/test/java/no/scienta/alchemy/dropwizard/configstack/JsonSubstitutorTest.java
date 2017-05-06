@@ -13,7 +13,7 @@ public class JsonSubstitutorTest {
     @Test
     public void substituteSimple() throws Exception {
         JsonNode jn1 = read("{ \"foo\": \"bar\"}");
-        JsonNode jnc = JsonSubstitutor.substitute(jn1, value -> value + value);
+        JsonNode jnc = Json.substitute(jn1, value -> value + value);
 
         assertNotNull(jnc);
         assertEquals(1, jnc.size());
@@ -24,7 +24,7 @@ public class JsonSubstitutorTest {
     @Test
     public void substituteStructure() throws Exception {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": \"bar\"}}");
-        JsonNode jnc = JsonSubstitutor.substitute(jn1, value -> value + value);
+        JsonNode jnc = Json.substitute(jn1, value -> value + value);
 
         assertNotNull(jnc);
         assertEquals(1, jnc.size());
@@ -36,7 +36,7 @@ public class JsonSubstitutorTest {
     @Test
     public void substituteArray() throws IOException {
         JsonNode jn1 = read("{ \"foo\": { \"fooNested\": [\"zip\", \"foo\"]}}");
-        JsonNode jnc = JsonSubstitutor.substitute(jn1, value -> value + value);
+        JsonNode jnc = Json.substitute(jn1, value -> value + value);
 
         assertNotNull(jnc);
         assertEquals(1, jnc.size());

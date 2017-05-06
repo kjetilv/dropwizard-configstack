@@ -13,6 +13,9 @@
         "port": 8082,
         "bindHost": "0.0.0.0"
       }
-    ]
+    ],
+    "gzip": {
+      "bufferSize" : "23 kilobytes"
+    }
   }
 }

@@ -8,8 +8,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.Objects;
+import java.util.Optional;
 
 final class StackingConfigurationSourceProvider implements ConfigurationSourceProvider {
 
@@ -19,7 +19,7 @@ final class StackingConfigurationSourceProvider implements ConfigurationSourcePr
 
     private final ConfigurationLoader configurationLoader;
 
-    private final ConfigurationBuilder configurationBuilder;
+    private final ConfigurationAssembler configurationAssembler;
 
     private final ConfigurationSubstitutor configurationSubstitutor;
 
@@ -28,7 +28,7 @@ final class StackingConfigurationSourceProvider implements ConfigurationSourcePr
     StackingConfigurationSourceProvider(ConfigurationStacker configurationStacker,
                                         ConfigurationResourceResolver configurationResourceResolver,
                                         ConfigurationLoader configurationLoader,
-                                        ConfigurationBuilder configurationBuilder,
+                                        ConfigurationAssembler configurationAssembler,
                                         ConfigurationSubstitutor configurationSubstitutor,
                                         ObjectMapper objectMapper,
                                         ProgressLogger progressLogger) {
@@ -36,14 +36,15 @@ final class StackingConfigurationSourceProvider implements ConfigurationSourcePr
                 Objects.requireNonNull(configurationStacker, "configurationStacker");
         this.configurationLoader =
                 Objects.requireNonNull(configurationLoader, "loadablesResolver");
-        this.configurationBuilder =
-                Objects.requireNonNull(configurationBuilder, "configurationResolver");
+        this.configurationAssembler =
+                Objects.requireNonNull(configurationAssembler, "configurationResolver");
         this.configurationSubstitutor =
                 Objects.requireNonNull(configurationSubstitutor, "configurationSubstitutor");
         this.objectMapper =
                 Objects.requireNonNull(objectMapper, "objectMapper");
-        this.progressLogger =
-                Objects.requireNonNull(progressLogger, "progressLogger");
+        this.progressLogger = safeLogger(
+                Objects.requireNonNull(progressLogger, "progressLogger")
+        );
     }
 
     /**
@@ -52,27 +53,49 @@ final class StackingConfigurationSourceProvider implements ConfigurationSourcePr
      */
     @Override
     public InputStream open(String serverCommand) {
-        JsonNode config = load(serverCommand);
-        logResult(config);
-        return stream(config);
+        Optional<JsonNode> config = load(serverCommand);
+        config.ifPresent(this::logResult);
+        return config.map(this::stream)
+                .orElseThrow(() -> notFound(serverCommand));
     }
 
-    private JsonNode load(String serverCommand) {
+    private Optional<JsonNode> load(String serverCommand) {
         try {
-            Collection<String> stackElements = configurationStacker.parse(serverCommand);
-            Collection<LoadedData> loadedData = configurationLoader.load(stackElements);
-            JsonNode combinedConfiguration = configurationBuilder.build(loadedData);
-            return configurationSubstitutor.substitute(combinedConfiguration);
+            return command(serverCommand)
+                    .map(configurationStacker::parse)
+                    .map(configurationLoader::load)
+                    .map(configurationAssembler::assemble)
+                    .map(configurationSubstitutor::substitute);
         } catch (Exception e) {
             throw new IllegalStateException("Failed to load config from argument <" + serverCommand + ">", e);
         }
     }
 
+    private ProgressLogger safeLogger(ProgressLogger progressLogger) {
+        return info -> {
+            try {
+                progressLogger.accept(info);
+            } catch (Exception e) {
+                System.err.println("ERROR Logging <" + info.get() + ">: " + e);
+            }
+        };
+    }
+
+    private Optional<String> command(String serverCommand) {
+        return Optional.ofNullable(serverCommand).filter(cmd -> !cmd.isEmpty());
+    }
+
+    private IllegalArgumentException notFound(String serverCommand) {
+        return new IllegalArgumentException("No config found for <" + serverCommand + ">");
+    }
+
     private void logResult(JsonNode node) {
         try {
-            progressLogger.println(() -> "End-result combined config: " + writeConfig(node));
+            progressLogger.println(() ->
+                    "End-result combined config: " + writeConfig(node));
         } catch (Exception e) {
-            progressLogger.println(() -> "Failed to serialize config for logging: " + e);
+            progressLogger.println(() ->
+                    "Failed to serialize config for logging: " + e);
         }
     }
 

@@ -22,13 +22,13 @@ public class DefaultConfigurationBuilderTest {
     }
 
     private JsonNode testBuild(String... paths) {
-        DefaultConfigurationBuilder combiner =
-                new DefaultConfigurationBuilder(new ObjectMapper(), ArrayStrategy.OVERLAY);
+        DefaultConfigurationAssembler combiner =
+                new DefaultConfigurationAssembler(new ObjectMapper(), ArrayStrategy.OVERLAY);
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         List<LoadedData> data =
                 Arrays.stream(paths)
                         .map(path -> LoadedData.create(path, contextClassLoader.getResourceAsStream(path)))
                         .collect(Collectors.toList());
-        return combiner.build(data);
+        return combiner.assemble(data);
     }
 }

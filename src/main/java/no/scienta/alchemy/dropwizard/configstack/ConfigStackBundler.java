@@ -4,7 +4,6 @@ import io.dropwizard.Bundle;
 import io.dropwizard.Configuration;
 
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -89,7 +88,7 @@ public interface ConfigStackBundler<C extends Configuration> {
      * @param configurationBuilder Override configuration builder
      * @return this bundler
      */
-    ConfigStackBundler<C> setConfigurationBuilder(ConfigurationBuilder configurationBuilder);
+    ConfigStackBundler<C> setConfigurationBuilder(ConfigurationAssembler configurationBuilder);
 
     /**
      * Override the procedure for performing substitutions on a loaded configuration
@@ -105,18 +104,10 @@ public interface ConfigStackBundler<C extends Configuration> {
      * @param substitutor Override string replacer
      * @return this bundler
      */
-    ConfigStackBundler<C> setSubstitutor(Function<String, String> substitutor);
-
-    /**
-     * Set a different string replacer, which will be used by the default {@link ConfigurationSubstitutor}.
-     *
-     * @param substitutor Override replacer
-     * @return this bundler
-     */
     ConfigStackBundler<C> setSubstitutor(StringSubstitutor substitutor);
 
     /**
-     * Set a different array strategy, to be used by the default {@link ConfigurationBuilder}.  If not set,
+     * Set a different array strategy, to be used by the default {@link ConfigurationAssembler}.  If not set,
      * {@link ArrayStrategy#OVERLAY} is used.
      *
      * @param arrayStrategy How to combine arrays
