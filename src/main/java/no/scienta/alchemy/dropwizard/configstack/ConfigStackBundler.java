@@ -15,6 +15,9 @@ import java.util.function.Supplier;
 public interface ConfigStackBundler<C extends Configuration> {
 
     /**
+     * Returns a ready-to-go default bundle which respects classpath resources and substitutes variables from
+     * system properties, environment and the config itself.
+     *
      * @param configurationClass Configuration class
      * @param <C> Configuration type
      * @return A bundle with default settings
@@ -24,6 +27,10 @@ public interface ConfigStackBundler<C extends Configuration> {
     }
 
     /**
+     * Returns a ready-to-go default bundler.  Will {@link #bundle() build} a default bundle which respects classpath
+     * resources and substitutes variables from system properties, environment and the config itself.  The bundler
+     * can be further customized before building.
+     *
      * @param configurationClass Configuration class
      * @param <C> Configuration type
      * @return A bundler with default settings, for further bundling
@@ -35,6 +42,8 @@ public interface ConfigStackBundler<C extends Configuration> {
     }
 
     /**
+     * Returns an "empty" bundler which loads from file and performs no substitution.  Intended for customization.
+     *
      * @param configurationClass Configuration class
      * @param <C> Configuration type
      * @return A basic bundler
@@ -44,7 +53,7 @@ public interface ConfigStackBundler<C extends Configuration> {
     }
 
     /**
-     * Set an alternative resolver
+     * Set an alternative resolver.
      *
      * @param configurationResourceResolver Resolver
      * @return this bundler
@@ -53,6 +62,7 @@ public interface ConfigStackBundler<C extends Configuration> {
 
     /**
      * Add base config to be loaded first.
+     *
      * @param common Common configs
      * @return this bundler
      */
@@ -72,6 +82,14 @@ public interface ConfigStackBundler<C extends Configuration> {
      * @return this bundler
      */
     ConfigStackBundler<C> enableVariableSubstitutions();
+
+    /**
+     * Override procedure for parsing server commands to stacks.
+     *
+     * @param configurationStacker Override configuration stacker
+     * @return this bundler
+     */
+    ConfigStackBundler<C> setConfigurationStacker(ConfigurationStacker configurationStacker);
 
     /**
      * Override procedure for {@link LoadedData loading data} based on a

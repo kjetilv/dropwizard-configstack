@@ -65,6 +65,12 @@ final class ConfigStackBundlerImpl<C extends Configuration> implements ConfigSta
     }
 
     @Override
+    public ConfigStackBundler<C> setConfigurationStacker(ConfigurationStacker configurationStacker) {
+        this.configurationStacker = configurationStacker;
+        return this;
+    }
+
+    @Override
     public ConfigStackBundler<C> setConfigurationLoader(ConfigurationLoader configurationLoader) {
         this.configurationLoader = configurationLoader;
         return this;

@@ -108,6 +108,22 @@ public class ConfigStackBundlerTest {
     }
 
     @Test
+    public void testSetCustomStacker() throws IOException {
+        ConfigurationStacker stacker = mock(ConfigurationStacker.class);
+        when(stacker.parse(eq("foo,bar"))).thenReturn(Arrays.asList("foo", "bar"));
+
+        Bundle bundle = base()
+                .setConfigurationStacker(stacker)
+                .bundle();
+        Bootstrap<StackAppConfiguration> bootstrap = mount(bundle, null);
+        ConfigurationSourceProvider provider = assertedStackingProvider(bootstrap);
+        InputStream open = provider.open("foo,bar");
+        assertNotNull(open);
+        verify(stacker, atLeastOnce()).parse("foo,bar");
+        assertFalse(progress.isEmpty());
+    }
+
+    @Test
     public void testSetCustomSubstitutor() throws IOException {
         ConfigurationSubstitutor sub = mock(ConfigurationSubstitutor.class);
         when(sub.substitute(any(JsonNode.class))).thenReturn(JsonNodeFactory.instance.objectNode());

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 final class StackingConfigurationSourceProvider implements ConfigurationSourceProvider {
 
@@ -53,19 +54,18 @@ final class StackingConfigurationSourceProvider implements ConfigurationSourcePr
      */
     @Override
     public InputStream open(String serverCommand) {
-        Optional<JsonNode> config = load(serverCommand);
-        config.ifPresent(this::logResult);
-        return config.map(this::stream)
-                .orElseThrow(() -> notFound(serverCommand));
+        return tryOpen(serverCommand).orElseThrow(notFound(serverCommand));
     }
 
-    private Optional<JsonNode> load(String serverCommand) {
+    private Optional<InputStream> tryOpen(String serverCommand) {
         try {
-            return command(serverCommand)
+            Optional<JsonNode> config = cmd(serverCommand)
                     .map(configurationStacker::parse)
                     .map(configurationLoader::load)
                     .map(configurationAssembler::assemble)
                     .map(configurationSubstitutor::substitute);
+            config.ifPresent(this::logResult);
+            return config.map(this::stream);
         } catch (Exception e) {
             throw new IllegalStateException("Failed to load config from argument <" + serverCommand + ">", e);
         }
@@ -81,12 +81,12 @@ final class StackingConfigurationSourceProvider implements ConfigurationSourcePr
         };
     }
 
-    private Optional<String> command(String serverCommand) {
+    private Optional<String> cmd(String serverCommand) {
         return Optional.ofNullable(serverCommand).filter(cmd -> !cmd.isEmpty());
     }
 
-    private IllegalArgumentException notFound(String serverCommand) {
-        return new IllegalArgumentException("No config found for <" + serverCommand + ">");
+    private Supplier<IllegalArgumentException> notFound(String serverCommand) {
+        return () -> new IllegalArgumentException("No config found for <" + serverCommand + ">");
     }
 
     private void logResult(JsonNode node) {
