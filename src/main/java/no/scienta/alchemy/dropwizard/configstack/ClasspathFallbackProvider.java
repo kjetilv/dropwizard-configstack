@@ -16,11 +16,9 @@ final class ClasspathFallbackProvider implements ConfigurationSourceProvider {
 
     private final ClassLoader classLoader;
 
-    ClasspathFallbackProvider(Bootstrap<?> bootstrap) {
-        this.delegate = bootstrap.getConfigurationSourceProvider();
-        this.classLoader = bootstrap.getClassLoader() != null
-                ? bootstrap.getClassLoader()
-                : Thread.currentThread().getContextClassLoader();
+    ClasspathFallbackProvider(ConfigurationSourceProvider provider, ClassLoader classLoader) {
+        this.delegate = provider;
+        this.classLoader = classLoader != null ? classLoader : Thread.currentThread().getContextClassLoader();
     }
 
     @Override

@@ -159,6 +159,15 @@ public interface ConfigStackBundler<C extends Configuration> {
     }
 
     /**
+     * Oh sorry, did you mistype me?
+     *
+     * @return {@link #bundle()}
+     */
+    default Bundle build() {
+        return bundle();
+    }
+
+    /**
      * @return The bundle
      */
     Bundle bundle();

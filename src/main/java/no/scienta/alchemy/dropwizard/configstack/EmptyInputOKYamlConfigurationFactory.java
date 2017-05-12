@@ -11,20 +11,17 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-class EmptyInputYamlConfigurationFactory<T>
+class EmptyInputOKYamlConfigurationFactory<T>
         extends YamlConfigurationFactory<T> {
 
     private final ConfigurationResourceResolver configurationResourceResolver;
 
     private final ConfigurationSourceProvider provider;
 
-    EmptyInputYamlConfigurationFactory(
+    EmptyInputOKYamlConfigurationFactory(
             Class<T> klass,
             Validator validator,
-            ObjectMapper objectMapper,
-            String propertyPrefix,
-            ConfigurationResourceResolver configurationResourceResolver,
-            ConfigurationSourceProvider provider) {
+            String propertyPrefix, ConfigurationResourceResolver configurationResourceResolver, ConfigurationSourceProvider provider, ObjectMapper objectMapper) {
         super(klass, validator, objectMapper.enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES), propertyPrefix);
         this.configurationResourceResolver = configurationResourceResolver;
         this.provider = provider;
