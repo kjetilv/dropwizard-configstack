@@ -1,7 +1,6 @@
 package no.scienta.alchemy.dropwizard.configstack;
 
 import io.dropwizard.configuration.ConfigurationSourceProvider;
-import io.dropwizard.setup.Bootstrap;
 
 import java.io.IOException;
 import java.io.InputStream;

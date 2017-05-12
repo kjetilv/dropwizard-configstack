@@ -72,10 +72,7 @@ final class ConfigStackBundle implements Bundle, BundleFondle {
     @Override
     public <C extends Configuration> C read(Class<C> configClass, String path, ObjectMapper objectMapper)
             throws IOException {
-        ConfigurationResourceResolver configurationResourceResolver =
-                getConfigurationResourceResolver();
         ConfigurationSourceProvider provider = buildProvider(
-                configurationResourceResolver,
                 null,
                 objectMapper,
                 Thread.currentThread().getContextClassLoader());
@@ -87,35 +84,22 @@ final class ConfigStackBundle implements Bundle, BundleFondle {
     @Override
     public void initialize(Bootstrap<?> bootstrap) {
         failOnMisconfiguration(bootstrap);
+        StackingConfigurationSourceProvider provider = buildProvider(bootstrap);
+        instrumentBootstrap(bootstrap, getConfigurationResourceResolver(), provider);
+    }
 
-        ObjectMapper objectMapper = bootstrap.getObjectMapper();
-        ConfigurationSourceProvider existingProvider = bootstrap.getConfigurationSourceProvider();
-        ClassLoader classLoader = bootstrap.getClassLoader();
-
-        ConfigurationResourceResolver configurationResourceResolver =
-                getConfigurationResourceResolver();
-
-        StackingConfigurationSourceProvider provider = buildProvider(
-                configurationResourceResolver,
-                existingProvider,
-                objectMapper,
-                classLoader);
-
-        bootstrap.setConfigurationFactoryFactory(
-                (klass, validator, om, propertyPrefix) ->
-                        new EmptyInputOKYamlConfigurationFactory<>(
-                                klass, validator, propertyPrefix,
-                                configurationResourceResolver, provider, om));
-
-        bootstrap.setConfigurationSourceProvider(provider);
+    private StackingConfigurationSourceProvider buildProvider(Bootstrap<?> bootstrap) {
+        return buildProvider(
+                bootstrap.getConfigurationSourceProvider(),
+                bootstrap.getObjectMapper(),
+                bootstrap.getClassLoader());
     }
 
     private StackingConfigurationSourceProvider buildProvider(
-            ConfigurationResourceResolver configurationResourceResolver,
             ConfigurationSourceProvider existingProvider,
             ObjectMapper objectMapper,
             ClassLoader classLoader) {
-
+        ConfigurationResourceResolver configurationResourceResolver = getConfigurationResourceResolver();
         ConfigurationSourceProvider delegate =
                 existingProvider == null ? new FileConfigurationSourceProvider() : existingProvider;
 
@@ -135,10 +119,24 @@ final class ConfigStackBundle implements Bundle, BundleFondle {
                 progressLogger);
     }
 
+    private void instrumentBootstrap(
+            Bootstrap<?> bootstrap,
+            ConfigurationResourceResolver configurationResourceResolver,
+            ConfigurationSourceProvider provider) {
+        bootstrap.setConfigurationFactoryFactory(
+                (klass, validator, om, propertyPrefix) ->
+                        new EmptyInputOKYamlConfigurationFactory<>(
+                                klass, validator, propertyPrefix,
+                                configurationResourceResolver, provider, om));
+        bootstrap.setConfigurationSourceProvider(provider);
+    }
+
     private void failOnMisconfiguration(Bootstrap<?> bootstrap) {
         if (bootstrap.getConfigurationSourceProvider() instanceof StackingConfigurationSourceProvider) {
+            String simpleName = StackingConfigurationSourceProvider.class.getSimpleName();
             throw new IllegalStateException
-                    ("Please set a different source provider: " + bootstrap.getConfigurationSourceProvider());
+                    ("Aborting! Configuration source provider is already a " + simpleName + ": " +
+                            bootstrap.getConfigurationSourceProvider());
         }
     }
 
