@@ -32,7 +32,7 @@ final class DefaultConfigurationAssembler implements ConfigurationAssembler {
         return loadables.stream()
                 .flatMap(this::readJson)
                 .reduce(objectNode(),
-                        Json.combiner(arrayStrategy));
+                        (base, override) -> JsonCombiner.combine(base, override, arrayStrategy));
     }
 
     private Stream<JsonNode> readJson(LoadedData loadedData) {

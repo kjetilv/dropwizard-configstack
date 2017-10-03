@@ -12,7 +12,7 @@ final class DefaultConfigurationSubstitutor implements ConfigurationSubstitutor 
 
     @Override
     public JsonNode substitute(JsonNode combined) {
-        return Json.substitute(combined, stringSubstitutor(combined)::substitute);
+        return JsonSubstitutor.substitute(combined, stringSubstitutor(combined)::substitute);
     }
 
     private StringSubstitutor stringSubstitutor(JsonNode combined) {

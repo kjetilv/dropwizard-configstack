@@ -16,7 +16,7 @@ public class DefaultSubstitutorTest {
         JsonNode jn1 = read("{ \"foo\": \"bar${bar}\"}");
         Properties properties = new Properties();
         properties.setProperty("bar", "zot");
-        JsonNode replace = Json.substitute(jn1, new DefaultStringSubstitutor(properties, null, jn1));
+        JsonNode replace = JsonSubstitutor.substitute(jn1, new DefaultStringSubstitutor(properties, null, jn1));
 
         assertNotNull(replace);
         assertEquals(1, replace.size());
@@ -29,7 +29,7 @@ public class DefaultSubstitutorTest {
         JsonNode jn1 = read("{ \"foo\": \"bar${bar}-${bar}-\"}");
         Properties properties = new Properties();
         properties.setProperty("bar", "zot");
-        JsonNode replace = Json.substitute(jn1, new DefaultStringSubstitutor(properties, null, jn1));
+        JsonNode replace = JsonSubstitutor.substitute(jn1, new DefaultStringSubstitutor(properties, null, jn1));
 
         assertNotNull(replace);
         assertEquals(1, replace.size());
@@ -42,7 +42,7 @@ public class DefaultSubstitutorTest {
         JsonNode jn1 = read("{ \"foo\": \"bar\", \"zot\": \"${/foo}\"}");
         Properties properties = new Properties();
         properties.setProperty("bar", "zot");
-        JsonNode replace = Json.substitute(jn1, new DefaultStringSubstitutor(properties, null, jn1));
+        JsonNode replace = JsonSubstitutor.substitute(jn1, new DefaultStringSubstitutor(properties, null, jn1));
 
         assertNotNull(replace);
         assertEquals(2, replace.size());
