@@ -29,7 +29,7 @@ public class LogSetupModeTest {
         assertThat(configuration.getLoggingFactory(), instanceOf(DefaultLoggingFactory.class));
 
         DefaultLoggingFactory dlf = (DefaultLoggingFactory) configuration.getLoggingFactory();
-        assertThat(dlf.getLevel(), is(Level.INFO));
+        assertThat(dlf.getLevel(), is("INFO"));
 
         AppenderFactory<ILoggingEvent> file = dlf.getAppenders().asList().get(0);
         assertThat(file, instanceOf(FileAppenderFactory.class));
