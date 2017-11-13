@@ -3,14 +3,14 @@ package no.scienta.alchemy.dropwizard.configstack;
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.commons.lang3.text.StrLookup;
-import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.commons.text.StrLookup;
+import org.apache.commons.text.StrSubstitutor;
 
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
 
-import static org.apache.commons.lang3.text.StrMatcher.stringMatcher;
+import static org.apache.commons.text.StrMatcher.stringMatcher;
 
 final class DefaultStringSubstitutor implements StringSubstitutor, Function<String, String> {
 
@@ -29,7 +29,7 @@ final class DefaultStringSubstitutor implements StringSubstitutor, Function<Stri
     @Override
     public String apply(String value) {
         StrSubstitutor strSubstitutor =
-                new StrSubstitutor(new Lookup(node), stringMatcher("${"), stringMatcher("}"),'\'');
+                new StrSubstitutor(new Lookup(node), stringMatcher("${"), stringMatcher("}"), '\'');
         String workString = value;
         while (true) {
             String replaced = strSubstitutor.replace(workString);
@@ -47,6 +47,8 @@ final class DefaultStringSubstitutor implements StringSubstitutor, Function<Stri
 
     private final class Lookup extends StrLookup<String> {
 
+        private static final String OR = "||";
+
         private final JsonNode node;
 
         private Lookup(JsonNode node) {
@@ -55,28 +57,49 @@ final class DefaultStringSubstitutor implements StringSubstitutor, Function<Stri
 
         @Override
         public String lookup(String key) {
-            return properties != null && properties.getProperty(key) != null ? properties.getProperty(key)
-                    : env != null && env.containsKey(key) ? env.get(key)
-                    : resolveJsonPointer(key, pointer(key)).asText();
+            String lookupKey;
+            String defaultValue;
+            if (key.contains(OR)) {
+                int endIndex = key.lastIndexOf(OR);
+                lookupKey = key.substring(0, endIndex);
+                defaultValue = key.substring(endIndex + OR.length());
+            } else {
+                lookupKey = key;
+                defaultValue = null;
+            }
+            String resolved = resolve(lookupKey);
+            if (resolved == null && defaultValue == null) {
+                throw new IllegalArgumentException
+                        ("Unknown variable ref '" + key + "': Unknown system property, env variable or JSON node, no default was specified");
+            }
+            return resolved == null ? defaultValue : resolved;
         }
 
-        private JsonNode resolveJsonPointer(String key, JsonPointer pointer) {
+        private String resolve(String lookupKey) {
+            return properties != null && properties.getProperty(lookupKey) != null ? properties.getProperty(lookupKey)
+                    : env != null && env.containsKey(lookupKey) ? env.get(lookupKey)
+                    : resolveJsonPointer(asPointer(lookupKey));
+        }
+
+        private String resolveJsonPointer(JsonPointer pointer) {
+            if (pointer == null) {
+                return null;
+            }
             TreeNode pointed = ((TreeNode) node).at(pointer);
             return pointed == null || pointed.isMissingNode() || !pointed.isValueNode()
-                    ? fail(key, "Unknown system property, env variable or JSON node")
-                    : (JsonNode) pointed;
+                    ? null
+                    : ((JsonNode) pointed).asText();
         }
 
-        private JsonPointer pointer(String key) {
+        private JsonPointer asPointer(String key) {
+            if (key == null) {
+                return null;
+            }
             try {
                 return JsonPointer.compile(key);
             } catch (IllegalArgumentException e) {
-                return fail(key, "Unknown system property or env variable, and invalid JSON pointer");
+                return null;
             }
-        }
-
-        private <T> T fail(String key, String problem) {
-            throw new IllegalArgumentException("Unknown variable reference '" + key + "': " + problem);
         }
     }
 }

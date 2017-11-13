@@ -25,6 +25,30 @@ public class DefaultSubstitutorTest {
     }
 
     @Test
+    public void defaults() throws IOException {
+        JsonNode jn1 = read("{ \"foo\": \"bar${bar||party}\"}");
+        Properties properties = new Properties();
+        JsonNode replace = JsonSubstitutor.substitute(jn1, new DefaultStringSubstitutor(properties, null, jn1));
+
+        assertNotNull(replace);
+        assertEquals(1, replace.size());
+        assertTrue(replace.has("foo"));
+        assertEquals("barparty", replace.get("foo").asText());
+    }
+
+    @Test
+    public void harderDefaults() throws IOException {
+        JsonNode jn1 = read("{ \"z\": \"${why||y}\", \"foo\": \"bar${bar||part${/z}}\"}");
+        Properties properties = new Properties();
+        JsonNode replace = JsonSubstitutor.substitute(jn1, new DefaultStringSubstitutor(properties, null, jn1));
+
+        assertNotNull(replace);
+        assertEquals(2, replace.size());
+        assertTrue(replace.has("foo"));
+        assertEquals("barparty", replace.get("foo").asText());
+    }
+
+    @Test
     public void simpleTwice() throws IOException {
         JsonNode jn1 = read("{ \"foo\": \"bar${bar}-${bar}-\"}");
         Properties properties = new Properties();
